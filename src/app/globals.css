@@ -1,0 +1,51 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #070d14;
+  --panel: #0f1729;
+  --border: rgba(255, 255, 255, 0.08);
+  --accent: #fbbf24;
+  --muted: #94a3b8;
+}
+
+body {
+  background: #030508;
+  color: #f1f5f9;
+  min-height: 100dvh;
+}
+
+/**
+ * Gutter aman 9:16 (Shorts / Reels / TikTok): tepi layar ↔ konten.
+ * Dipakai di MainShell sebagai padding luar bingkai.
+ */
+.shorts-safe-gutter {
+  padding-top: max(0.625rem, env(safe-area-inset-top, 0px));
+  padding-right: max(0.625rem, env(safe-area-inset-right, 0px));
+  padding-bottom: max(0.625rem, env(safe-area-inset-bottom, 0px));
+  padding-left: max(0.625rem, env(safe-area-inset-left, 0px));
+}
+
+/* Papan: slow motion dari atas; durasi & jeda antar papan di src/lib/panelAnimation.ts */
+@keyframes panel-slide-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, -72px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+.animate-panel-slide-in {
+  animation: panel-slide-in var(--panel-enter-duration, 3s)
+    cubic-bezier(0.22, 0.99, 0.35, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-panel-slide-in {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
