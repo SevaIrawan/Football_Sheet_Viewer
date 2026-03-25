@@ -1,6 +1,14 @@
 import type { MatchRow } from "@/lib/types";
+import {
+  SAMPLE_STATS_HOME_D,
+  SAMPLE_STATS_MOCK_A,
+  SAMPLE_STATS_MOCK_B,
+  SAMPLE_STATS_MOCK_C,
+  SAMPLE_STATS_MOCK_E,
+  SAMPLE_STATS_MOCK_F,
+} from "@/lib/matchStatistics";
 
-/** Data demo jika `SHEET_CSV_URL` belum di-set. Sepuluh baris ber-skor = sepuluh papan hasil. */
+/** Data demo jika `SHEET_CSV_URL` belum di-set. Enam baris ber-skor = enam papan hasil. */
 export const SAMPLE_MATCHES: MatchRow[] = [
   {
     league_name: "Contoh Liga",
@@ -14,6 +22,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "1",
     kickoff: "",
     status: "FT",
+    statistics: SAMPLE_STATS_MOCK_A,
   },
   {
     league_name: "Contoh Liga",
@@ -27,6 +36,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "2",
     kickoff: "",
     status: "FT",
+    statistics: SAMPLE_STATS_MOCK_B,
   },
   {
     league_name: "Contoh Liga",
@@ -40,6 +50,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "0",
     kickoff: "",
     status: "FT",
+    statistics: SAMPLE_STATS_MOCK_C,
   },
   {
     league_name: "Contoh Liga",
@@ -53,6 +64,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "2",
     kickoff: "",
     status: "FT",
+    statistics: SAMPLE_STATS_HOME_D,
   },
   {
     league_name: "Contoh Liga",
@@ -66,6 +78,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "4",
     kickoff: "",
     status: "FT",
+    statistics: SAMPLE_STATS_MOCK_E,
   },
   {
     league_name: "Contoh Liga",
@@ -79,57 +92,6 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "2",
     kickoff: "",
     status: "FT",
-  },
-  {
-    league_name: "Contoh Liga",
-    league_logo_key: "sample-league",
-    matchweek: "Pekan 1",
-    home_logo_key: "home-g",
-    away_logo_key: "away-g",
-    home_name: "Home G",
-    away_name: "Away G",
-    home_score: "1",
-    away_score: "0",
-    kickoff: "",
-    status: "FT",
-  },
-  {
-    league_name: "Contoh Liga",
-    league_logo_key: "sample-league",
-    matchweek: "Pekan 1",
-    home_logo_key: "home-h",
-    away_logo_key: "away-h",
-    home_name: "Home H",
-    away_name: "Away H",
-    home_score: "4",
-    away_score: "3",
-    kickoff: "",
-    status: "FT",
-  },
-  {
-    league_name: "Contoh Liga",
-    league_logo_key: "sample-league",
-    matchweek: "Pekan 1",
-    home_logo_key: "home-i",
-    away_logo_key: "away-i",
-    home_name: "Home I",
-    away_name: "Away I",
-    home_score: "0",
-    away_score: "1",
-    kickoff: "",
-    status: "FT",
-  },
-  {
-    league_name: "Contoh Liga",
-    league_logo_key: "sample-league",
-    matchweek: "Pekan 1",
-    home_logo_key: "home-j",
-    away_logo_key: "away-j",
-    home_name: "Home J",
-    away_name: "Away J",
-    home_score: "5",
-    away_score: "0",
-    kickoff: "",
-    status: "FT",
+    statistics: SAMPLE_STATS_MOCK_F,
   },
 ];

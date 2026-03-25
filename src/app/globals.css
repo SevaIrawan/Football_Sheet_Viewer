@@ -1,16 +1,32 @@
 @import "tailwindcss";
 
+/**
+ * Alzam Sheet — aksen merek oranye cerah (brand-*): kontras kuat di UI gelap & video.
+ */
+@theme {
+  --color-brand-50: #fff7ed;
+  --color-brand-100: #ffedd5;
+  --color-brand-200: #fed7aa;
+  --color-brand-300: #fdba74;
+  --color-brand-400: #fb923c;
+  --color-brand-500: #f97316;
+  --color-brand-600: #ea580c;
+  --color-brand-700: #c2410c;
+}
+
 :root {
   --bg: #070d14;
   --panel: #0f1729;
   --border: rgba(255, 255, 255, 0.08);
-  --accent: #fbbf24;
+  --accent: #fb923c;
+  --accent-soft: rgba(251, 146, 60, 0.22);
+  --accent-glow: rgba(249, 115, 22, 0.48);
   --muted: #94a3b8;
 }
 
 body {
   background: #030508;
-  color: #f1f5f9;
+  color: #e2e8f0;
   min-height: 100dvh;
 }
 
@@ -23,6 +39,151 @@ body {
   padding-right: max(0.625rem, env(safe-area-inset-right, 0px));
   padding-bottom: max(0.625rem, env(safe-area-inset-bottom, 0px));
   padding-left: max(0.625rem, env(safe-area-inset-left, 0px));
+}
+
+/**
+ * Kartu skor hasil: gradien halus + siluet "lapangan" (garis tengah + lingkar tengah sangat redup).
+ * Hanya CSS — ringan, tidak perlu asset gambar; kontras teks putih tetap aman.
+ */
+.score-card-field {
+  background-color: #1a1d24;
+  background-image:
+    radial-gradient(
+      circle at 50% 36%,
+      transparent 28%,
+      rgba(255, 255, 255, 0.05) 28.5%,
+      rgba(255, 255, 255, 0.05) 32.5%,
+      transparent 33%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 49.35%,
+      rgba(255, 255, 255, 0.07) 49.35%,
+      rgba(255, 255, 255, 0.07) 50.65%,
+      transparent 50.65%
+    ),
+    repeating-linear-gradient(
+      -6deg,
+      transparent,
+      transparent 9px,
+      rgba(255, 255, 255, 0.018) 9px,
+      rgba(255, 255, 255, 0.018) 10px
+    ),
+    radial-gradient(
+      125% 90% at 50% 108%,
+      rgba(249, 115, 22, 0.11),
+      transparent 55%
+    ),
+    radial-gradient(
+      95% 55% at 8% -5%,
+      rgba(56, 189, 248, 0.055),
+      transparent 50%
+    ),
+    linear-gradient(158deg, #1d212b 0%, #1a1d26 45%, #161920 100%);
+}
+
+.score-card-field-empty {
+  background-color: #141820;
+  background-image:
+    radial-gradient(
+      circle at 50% 38%,
+      transparent 26%,
+      rgba(255, 255, 255, 0.035) 26.5%,
+      rgba(255, 255, 255, 0.035) 31%,
+      transparent 31.5%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 49.4%,
+      rgba(255, 255, 255, 0.05) 49.4%,
+      rgba(255, 255, 255, 0.05) 50.6%,
+      transparent 50.6%
+    ),
+    repeating-linear-gradient(
+      -6deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.012) 10px,
+      rgba(255, 255, 255, 0.012) 11px
+    ),
+    radial-gradient(
+      120% 85% at 50% 105%,
+      rgba(249, 115, 22, 0.07),
+      transparent 58%
+    ),
+    linear-gradient(160deg, #171b24 0%, #141820 50%, #11151c 100%);
+}
+
+/**
+ * Background motif lapangan untuk card bookmark (Summary/Line-up/Statistics/Table).
+ * Sangat halus: tidak mengganggu teks / bar / tabel di atasnya.
+ */
+.bookmark-card-field {
+  background-color: #12151c;
+  background-image:
+    radial-gradient(
+      circle at 50% 34%,
+      transparent 29%,
+      rgba(255, 255, 255, 0.028) 29.6%,
+      rgba(255, 255, 255, 0.028) 32.5%,
+      transparent 33.1%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 49.45%,
+      rgba(255, 255, 255, 0.032) 49.45%,
+      rgba(255, 255, 255, 0.032) 50.55%,
+      transparent 50.55%
+    ),
+    repeating-linear-gradient(
+      -6deg,
+      transparent,
+      transparent 12px,
+      rgba(255, 255, 255, 0.008) 12px,
+      rgba(255, 255, 255, 0.008) 13px
+    ),
+    radial-gradient(
+      120% 85% at 50% 110%,
+      rgba(249, 115, 22, 0.055),
+      transparent 62%
+    ),
+    linear-gradient(158deg, #141823 0%, #12151c 55%, #0f1218 100%);
+}
+
+/**
+ * Background "canvas" papan Result: motif lapangan sangat halus untuk seluruh panel,
+ * dari area bookmark sampai ke bawah (bukan hanya di dalam card).
+ */
+.result-panel-field {
+  background-color: rgba(18, 21, 28, 0.95);
+  background-image:
+    radial-gradient(
+      circle at 50% 22%,
+      transparent 31%,
+      rgba(255, 255, 255, 0.018) 31.6%,
+      rgba(255, 255, 255, 0.018) 34.3%,
+      transparent 34.9%
+    ),
+    linear-gradient(
+      90deg,
+      transparent 49.6%,
+      rgba(255, 255, 255, 0.02) 49.6%,
+      rgba(255, 255, 255, 0.02) 50.4%,
+      transparent 50.4%
+    ),
+    repeating-linear-gradient(
+      -6deg,
+      transparent,
+      transparent 14px,
+      rgba(255, 255, 255, 0.006) 14px,
+      rgba(255, 255, 255, 0.006) 15px
+    ),
+    radial-gradient(
+      125% 90% at 50% 115%,
+      rgba(249, 115, 22, 0.035),
+      transparent 62%
+    ),
+    linear-gradient(158deg, #141823 0%, rgba(18, 21, 28, 0.95) 55%, #0f1218 100%);
 }
 
 /* Papan: slow motion dari atas; durasi & jeda antar papan di src/lib/panelAnimation.ts */

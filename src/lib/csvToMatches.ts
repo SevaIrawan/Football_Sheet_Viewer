@@ -1,6 +1,9 @@
 import Papa from "papaparse";
 import type { MatchRow } from "@/lib/types";
 
+/** Kolom sheet CSV (bukan objek `statistics` — itu dari API/DB). */
+type MatchRowCsvKey = Exclude<keyof MatchRow, "statistics">;
+
 function normalizeHeaderKey(key: string): string {
   return key
     .trim()
@@ -10,7 +13,7 @@ function normalizeHeaderKey(key: string): string {
 }
 
 /** Alias header sheet → field internal */
-const FIELD_ALIASES: Record<string, keyof MatchRow> = {
+const FIELD_ALIASES: Record<string, MatchRowCsvKey> = {
   league_name: "league_name",
   leaguename: "league_name",
   liga: "league_name",

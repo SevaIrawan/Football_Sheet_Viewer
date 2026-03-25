@@ -1,6 +1,8 @@
 "use client";
 
 import type { MatchRow } from "@/lib/types";
+import { MatchStatisticsBars } from "@/components/MatchStatisticsBars";
+import { getMatchStatistics } from "@/lib/matchStatistics";
 import { LogoImg } from "@/components/LogoImg";
 
 export function hasScore(m: MatchRow): boolean {
@@ -27,48 +29,131 @@ function statusSubtitle(m: MatchRow, scored: boolean): string {
 const RESULT_TABS = [
   { id: "summary", label: "Summary" },
   { id: "lineup", label: "Line-up" },
-  { id: "statistik", label: "Statistik" },
+  { id: "statistik", label: "Statistics" },
   { id: "table", label: "Table" },
 ] as const;
 
 export type ResultTabId = (typeof RESULT_TABS)[number]["id"];
 
-function ResultTabPlaceholder({ tab, homeName, awayName }: {
-  tab: ResultTabId;
-  homeName: string;
-  awayName: string;
+const BOOKMARK_SCROLL =
+  "min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.35)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600/50";
+
+/**
+ * Kartu bookmark: tinggi = slot grid (bukan konten). Border tetap; isi scroll di dalam.
+ */
+function ResultBookmarkCard({
+  noScroll = false,
+  children,
+}: {
+  noScroll?: boolean;
+  children: React.ReactNode;
 }) {
-  const pair = `${homeName} vs ${awayName}`;
-  switch (tab) {
-    case "summary":
-      return <SummaryPlaceholder pair={pair} />;
-    case "lineup":
-      return <LineupPlaceholder homeName={homeName} awayName={awayName} />;
-    case "statistik":
-      return <StatistikLongPlaceholder homeName={homeName} awayName={awayName} />;
-    case "table":
-      return <KlasemenLongPlaceholder />;
-    default:
-      return null;
-  }
+  return (
+    <div className="bookmark-card-field flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] sm:rounded-xl">
+      <div
+        className={`flex min-h-0 flex-1 flex-col ${noScroll ? "overflow-hidden" : BOOKMARK_SCROLL} px-2 py-2 sm:px-2.5 sm:py-2.5`}
+      >
+        {children}
+      </div>
+    </div>
+  );
 }
 
-function SummaryPlaceholder({ pair }: { pair: string }) {
+function ResultTabPlaceholder({
+  tab,
+  match,
+}: {
+  tab: ResultTabId;
+  match: MatchRow;
+}) {
+  const { home_name: homeName, away_name: awayName } = match;
+  let inner: React.ReactNode = null;
+  switch (tab) {
+    case "summary":
+      inner = <SummaryPlaceholder />;
+      break;
+    case "lineup":
+      inner = <LineupPlaceholder homeName={homeName} awayName={awayName} />;
+      break;
+    case "statistik":
+      inner = (
+        <div className="space-y-2">
+          <MatchStatisticsBars statistics={getMatchStatistics(match)} />
+          <GoalScorers />
+        </div>
+      );
+      break;
+    case "table":
+      inner = <KlasemenLongPlaceholder />;
+      break;
+    default:
+      inner = null;
+  }
+  return <ResultBookmarkCard noScroll={tab === "statistik"}>{inner}</ResultBookmarkCard>;
+}
+
+type GoalScorerRow = {
+  id: string;
+  homeName?: string;
+  minute?: string;
+  awayName?: string;
+};
+
+function GoalScorers({
+  rows,
+}: {
+  /** Nanti isi dari database; sementara tampil 5 baris kosong bila tidak ada data. */
+  rows?: GoalScorerRow[];
+}) {
+  const safeRows: GoalScorerRow[] =
+    rows && rows.length > 0
+      ? rows
+      : Array.from({ length: 5 }, (_, i) => ({
+          id: `empty-${i}`,
+          homeName: "",
+          minute: "",
+          awayName: "",
+        }));
+
   return (
-    <div className="space-y-3 text-sm leading-relaxed text-slate-400">
-      <p>
-        Ringkasan pertandingan <span className="text-slate-300">{pair}</span> — placeholder.
-        Hubungkan narasi dari sheet atau API.
-      </p>
-      <p>
-        Babak pertama: tempo permainan, peluang besar, dan momen kunci (gol, kartu,
-        cedera) akan tampil di sini.
-      </p>
-      <p>
-        Babak kedua: perubahan taktik, pergantian pemain, dan penutup laga — data
-        mengikuti papan skor yang aktif.
-      </p>
-    </div>
+    <section
+      className="rounded-md border border-white/[0.04] bg-white/[0.015]"
+      aria-label="Goal scorers"
+    >
+      <div className="flex items-center justify-between gap-2 border-b border-white/[0.04] px-2 py-1">
+        <p className="text-[11px] font-semibold tracking-wide text-slate-300">
+          Goal scorers
+        </p>
+      </div>
+
+      <ul className="divide-y divide-white/[0.035]" role="list">
+        {safeRows.map((r) => (
+          <li
+            key={r.id}
+            className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 px-2 py-1.5"
+          >
+            <span className="min-w-0 truncate text-left text-[11px] font-medium text-slate-300">
+              {r.homeName ?? ""}
+            </span>
+            <span className="rounded-full border border-white/[0.06] bg-black/10 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-slate-400">
+              {r.minute ?? ""}
+            </span>
+            <span className="min-w-0 truncate text-right text-[11px] font-medium text-slate-300">
+              {r.awayName ?? ""}
+            </span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  );
+}
+
+function SummaryPlaceholder() {
+  return (
+    <div
+      className="min-h-[12rem] rounded-md bg-white/[0.03]"
+      aria-label="Summary"
+    />
   );
 }
 
@@ -92,12 +177,9 @@ function LineupPlaceholder({
 
   return (
     <div className="space-y-4 text-xs">
-      <p className="text-[11px] text-slate-500">
-        Susunan placeholder — mengikuti papan skor aktif.
-      </p>
       <div>
-        <p className="mb-1.5 font-semibold text-amber-200/90">{homeName}</p>
-        <ul className="divide-y divide-white/[0.06] rounded-lg border border-white/[0.08]">
+        <p className="mb-1.5 font-semibold text-brand-300/90">{homeName}</p>
+        <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-md bg-white/[0.02]">
           {homeXI.map((p) => (
             <li
               key={p.no}
@@ -111,8 +193,8 @@ function LineupPlaceholder({
         </ul>
       </div>
       <div>
-        <p className="mb-1.5 font-semibold text-amber-200/90">{awayName}</p>
-        <ul className="divide-y divide-white/[0.06] rounded-lg border border-white/[0.08]">
+        <p className="mb-1.5 font-semibold text-brand-300/90">{awayName}</p>
+        <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-md bg-white/[0.02]">
           {awayXI.map((p) => (
             <li
               key={p.no}
@@ -125,87 +207,14 @@ function LineupPlaceholder({
           ))}
         </ul>
       </div>
-      <p className="text-[11px] text-slate-500">
-        Cadangan & pelatih — tambahkan dari data nanti.
-      </p>
-    </div>
-  );
-}
-
-/** Baris statistik contoh — siap diganti data sheet/API. */
-function shortTeamLabel(name: string, max = 5): string {
-  const t = name.trim();
-  if (t.length <= max) return t;
-  return `${t.slice(0, max)}…`;
-}
-
-function StatistikLongPlaceholder({
-  homeName,
-  awayName,
-}: {
-  homeName: string;
-  awayName: string;
-}) {
-  const hShort = shortTeamLabel(homeName);
-  const aShort = shortTeamLabel(awayName);
-  const rows: { label: string; home: string; away: string }[] = [
-    { label: "Tembakan", home: "—", away: "—" },
-    { label: "Tepat sasaran", home: "—", away: "—" },
-    { label: "Penguasaan bola", home: "—", away: "—" },
-    { label: "Tendangan sudut", home: "—", away: "—" },
-    { label: "Pelanggaran", home: "—", away: "—" },
-    { label: "Offside", home: "—", away: "—" },
-    { label: "Kartu kuning", home: "—", away: "—" },
-    { label: "Kartu merah", home: "—", away: "—" },
-    { label: "Saves", home: "—", away: "—" },
-    { label: "Big chances", home: "—", away: "—" },
-    { label: "Passes", home: "—", away: "—" },
-    { label: "Akurasi operan", home: "—", away: "—" },
-  ];
-
-  return (
-    <div className="space-y-2">
-      <p className="text-[11px] text-slate-500">
-        <span className="text-slate-400">{homeName}</span>
-        {" vs "}
-        <span className="text-slate-400">{awayName}</span>
-        <span className="text-slate-600"> — gulir di dalam area ini jika panjang</span>
-      </p>
-      <div className="rounded-xl border border-white/[0.08] bg-[#12151c]">
-        <div className="grid grid-cols-[1fr_auto_auto] gap-x-2 border-b border-white/[0.06] px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
-          <span>Metrik</span>
-          <span className="max-w-[4.5rem] truncate text-center text-[9px] normal-case tracking-normal text-slate-400">
-            {hShort}
-          </span>
-          <span className="max-w-[4.5rem] truncate text-center text-[9px] normal-case tracking-normal text-slate-400">
-            {aShort}
-          </span>
-        </div>
-        <ul className="divide-y divide-white/[0.05]">
-          {rows.map((r) => (
-            <li
-              key={r.label}
-              className="grid grid-cols-[1fr_auto_auto] items-center gap-x-2 px-2 py-1.5 text-xs"
-            >
-              <span className="text-slate-400">{r.label}</span>
-              <span className="w-10 text-center font-semibold tabular-nums text-white">
-                {r.home}
-              </span>
-              <span className="w-10 text-center font-semibold tabular-nums text-white">
-                {r.away}
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
     </div>
   );
 }
 
 function KlasemenLongPlaceholder() {
-  const rows = Array.from({ length: 16 }, (_, i) => ({
+  const rows = Array.from({ length: 10 }, (_, i) => ({
     pos: i + 1,
-    team: `Tim ${i + 1}`,
+    team: `Team ${i + 1}`,
     pld: "—",
     w: "—",
     d: "—",
@@ -214,26 +223,27 @@ function KlasemenLongPlaceholder() {
   }));
 
   return (
-    <div className="space-y-2">
-      <p className="text-[11px] text-slate-500">
-        Tabel klasemen (placeholder) — gulir di dalam area ini jika panjang.
-      </p>
-      <div className="rounded-xl border border-white/[0.08] bg-[#12151c]">
-        <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-x-2 border-b border-white/[0.06] px-2 py-1.5 text-[8px] font-semibold uppercase tracking-wide text-slate-500">
-          <span className="w-6 text-center">#</span>
-          <span>Tim</span>
-          <span className="w-6 text-center">P</span>
-          <span className="w-6 text-center">M</span>
-          <span className="w-6 text-center">S</span>
-          <span className="w-6 text-center">K</span>
-          <span className="w-7 text-center">Poin</span>
-        </div>
-        <ul className="divide-y divide-white/[0.05]">
-          {rows.map((r) => (
-            <li
-              key={r.pos}
-              className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-2 px-2 py-1.5 text-[11px]"
-            >
+    <>
+      <div className="grid shrink-0 grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-x-2 border-b border-white/[0.06] px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
+        <span className="w-6 text-center">#</span>
+        <span>Team</span>
+        <span className="w-6 text-center">P</span>
+        <span className="w-6 text-center">W</span>
+        <span className="w-6 text-center">D</span>
+        <span className="w-6 text-center">L</span>
+        <span className="w-7 text-center">Pts</span>
+      </div>
+      <ul
+        className="flex flex-col gap-px"
+        lang="en"
+        aria-label="Standings"
+      >
+        {rows.map((r) => (
+          <li
+            key={r.pos}
+            className="border-b border-white/[0.05] last:border-b-0"
+          >
+            <div className="grid grid-cols-[auto_1fr_auto_auto_auto_auto_auto] items-center gap-x-2 px-2 py-0.5 text-[11px] sm:text-[12px]">
               <span className="w-6 text-center font-medium text-slate-500">
                 {r.pos}
               </span>
@@ -253,21 +263,21 @@ function KlasemenLongPlaceholder() {
               <span className="w-7 text-center font-semibold tabular-nums text-white">
                 {r.pts}
               </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+    </>
   );
 }
 
 /** Jumlah papan skor tetap di carousel (hasil). */
-export const SCORE_PANEL_COUNT = 10;
+export const SCORE_PANEL_COUNT = 6;
 
 /** Papan skor kosong — slot tanpa data hasil di sheet. */
 export function MatchScoreEmptySlide({ panelNumber }: { panelNumber: number }) {
   return (
-    <article className="w-full min-w-0 overflow-hidden rounded-2xl border border-dashed border-white/20 bg-[#141820]/95 shadow-lg shadow-black/25">
+    <article className="score-card-field-empty w-full min-w-0 overflow-hidden rounded-2xl border border-dashed border-white/20 shadow-lg shadow-black/25">
       <div className="px-4 pb-6 pt-6 sm:px-5">
         <p className="mb-4 text-center text-[10px] font-semibold uppercase tracking-wider text-slate-500">
           Papan {panelNumber}
@@ -314,7 +324,7 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
   const subtitle = statusSubtitle(m, true);
 
   return (
-    <article className="w-full min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#1a1d24] shadow-lg shadow-black/30">
+    <article className="score-card-field w-full min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] shadow-lg shadow-black/30">
       <div className="px-3 pb-5 pt-5 sm:px-4 sm:pb-6 sm:pt-6">
         <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-1.5 sm:gap-3">
           <div className="flex min-w-0 flex-col items-center gap-2 text-center sm:gap-2.5">
@@ -388,7 +398,7 @@ export function MatchDetailTabNav({
               disabled
                 ? "cursor-not-allowed border-b-2 border-transparent text-slate-600 opacity-50"
                 : active
-                  ? "border-b-[3px] border-orange-500 text-orange-500"
+                  ? "border-b-[3px] border-brand-400 text-brand-400"
                   : "border-b-2 border-transparent text-slate-500 hover:border-white/10 hover:text-slate-300"
             }`}
           >
@@ -402,19 +412,15 @@ export function MatchDetailTabNav({
 
 export function MatchDetailTabContent({
   tab,
-  homeName,
-  awayName,
+  match,
 }: {
   tab: ResultTabId;
-  homeName: string;
-  awayName: string;
+  match: MatchRow;
 }) {
   return (
-    <ResultTabPlaceholder
-      tab={tab}
-      homeName={homeName}
-      awayName={awayName}
-    />
+    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+      <ResultTabPlaceholder tab={tab} match={match} />
+    </div>
   );
 }
 
@@ -424,7 +430,7 @@ function MatchScheduleCard({ m }: { m: MatchRow }) {
   return (
     <article className="rounded-2xl border border-white/[0.08] bg-[#0f1729] p-3 shadow-lg shadow-black/40">
       <div className="mb-2 flex items-center justify-between gap-2 border-b border-white/[0.06] pb-2">
-        <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-amber-200/90">
+        <span className="truncate text-[10px] font-semibold uppercase tracking-wider text-brand-300/90">
           {status}
         </span>
         {m.kickoff ? (

@@ -8,10 +8,10 @@ type MainPage = "schedule" | "result";
 
 function SchedulePlaceholder() {
   return (
-    <div className="flex h-full min-h-0 w-full flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-2.5">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-2.5">
       <header className="mb-3 shrink-0 flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-[#0c1220] px-3 py-3.5 sm:px-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] sm:h-14 sm:w-14">
-          <CalendarDays className="h-6 w-6 text-amber-400/90 sm:h-7 sm:w-7" strokeWidth={1.75} />
+          <CalendarDays className="h-6 w-6 text-brand-400/90 sm:h-7 sm:w-7" strokeWidth={1.75} />
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="text-base font-bold text-white sm:text-lg">Schedule</h1>
@@ -41,7 +41,7 @@ export function MainShell() {
       >
         <main
           id="main-content"
-          className="min-h-0 flex-1 overflow-hidden"
+          className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
           {page === "schedule" ? <SchedulePlaceholder /> : <MatchViewer />}
         </main>
@@ -57,7 +57,7 @@ export function MainShell() {
               aria-current={page === "schedule" ? "page" : undefined}
               className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition sm:py-3.5 ${
                 page === "schedule"
-                  ? "bg-orange-500/90 text-slate-900 shadow-md shadow-orange-500/20"
+                  ? "bg-brand-500/92 text-slate-950 shadow-md shadow-brand-500/30"
                   : "bg-white/[0.08] text-slate-300 hover:bg-white/[0.12]"
               }`}
             >
@@ -70,7 +70,7 @@ export function MainShell() {
               aria-current={page === "result" ? "page" : undefined}
               className={`inline-flex flex-1 items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold transition sm:py-3.5 ${
                 page === "result"
-                  ? "bg-orange-500/90 text-slate-900 shadow-md shadow-orange-500/20"
+                  ? "bg-brand-500/92 text-slate-950 shadow-md shadow-brand-500/30"
                   : "bg-white/[0.08] text-slate-300 hover:bg-white/[0.12]"
               }`}
             >

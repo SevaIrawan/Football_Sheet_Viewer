@@ -24,7 +24,7 @@ import {
   type ResultTabId,
 } from "@/components/MatchPanel";
 
-const AUTO_ADVANCE_MS = 5000;
+const AUTO_ADVANCE_MS = 9000;
 const PAUSE_AUTO_AFTER_INTERACTION_MS = 12000;
 
 /** Nama akun tampilan (statis) — sejajar caption pertandingan aktif */
@@ -35,6 +35,10 @@ type ApiResponse = {
   source: "sample" | "sheet";
   error?: string;
 };
+
+function headerLeagueSubtitle(m: MatchRow): string {
+  return m.matchweek.trim() || m.kickoff.trim() || "\u2014";
+}
 
 function getSlideStepPx(el: HTMLDivElement): number {
   const first = el.firstElementChild as HTMLElement | null;
@@ -87,6 +91,7 @@ export function MatchViewer() {
       setError("Gagal memuat data.");
       setRows([]);
       setSource(null);
+      setActiveIndex(0);
     } finally {
       setLoading(false);
     }
@@ -102,12 +107,6 @@ export function MatchViewer() {
   );
 
   const slides = useMemo(() => buildScoreSlides(results), [results]);
-
-  useEffect(() => {
-    setActiveIndex((i) =>
-      Math.min(Math.max(0, i), SCORE_PANEL_COUNT - 1),
-    );
-  }, [results.length]);
 
   useEffect(() => {
     setDetailTab("statistik");
@@ -132,6 +131,17 @@ export function MatchViewer() {
     setActiveIndex(clamped);
   }, []);
 
+  useLayoutEffect(() => {
+    const max = SCORE_PANEL_COUNT - 1;
+    const clamped = Math.min(Math.max(0, activeIndex), max);
+    if (clamped !== activeIndex) {
+      setActiveIndex(clamped);
+      requestAnimationFrame(() => {
+        snapCarouselToIndex(clamped);
+      });
+    }
+  }, [activeIndex, snapCarouselToIndex]);
+
   const syncIndexFromScroll = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
@@ -152,6 +162,17 @@ export function MatchViewer() {
       snapCarouselToIndex(activeIndexRef.current);
     });
   }, [loading, snapCarouselToIndex]);
+
+  useLayoutEffect(() => {
+    if (loading) return;
+    const id = requestAnimationFrame(() => {
+      const el = scrollerRef.current;
+      if (!el) return;
+      const idx = readActiveSlideIndex(el);
+      setActiveIndex((prev) => (prev !== idx ? idx : prev));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [loading]);
 
   useEffect(
     () => () => {
@@ -199,31 +220,38 @@ export function MatchViewer() {
   }, []);
 
   const activeMatch = slides[activeIndex];
-  const header = activeMatch ?? results[0];
 
   return (
-    <div className="flex h-full min-h-0 w-full flex-col px-2 pb-1 pt-2 sm:px-2.5">
-      {/* 1) Header: logo liga, judul, avatar akun */}
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-2.5">
       <header className="mb-3 shrink-0 flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-[#0c1220] px-3 pb-3 pt-3.5 sm:gap-3 sm:px-4 sm:pb-3.5 sm:pt-4">
-        <LogoImg
-          kind="leagues"
-          logoKey={header?.league_logo_key ?? ""}
-          label={header?.league_name ?? "Liga"}
-          className={`${HEADER_LOGO_MATCH_SIZE} rounded-full object-cover ring-2 ring-white/[0.12]`}
-        />
+        {activeMatch ? (
+          <LogoImg
+            kind="leagues"
+            logoKey={activeMatch.league_logo_key}
+            label={activeMatch.league_name || "Liga"}
+            className={`${HEADER_LOGO_MATCH_SIZE} rounded-full object-cover ring-2 ring-white/[0.12]`}
+          />
+        ) : (
+          <div
+            className={`${HEADER_LOGO_MATCH_SIZE} shrink-0 rounded-full border border-white/10 bg-white/[0.04] ring-2 ring-white/[0.06]`}
+            aria-hidden
+          />
+        )}
         <div className="min-w-0 flex-1">
           <h1 className="line-clamp-2 break-words text-base font-bold leading-tight text-white sm:text-lg">
-            {header?.league_name || "Football Sheet Viewer"}
+            {activeMatch
+              ? activeMatch.league_name.trim() || "Liga"
+              : "Football Sheet Viewer"}
           </h1>
-          {header?.matchweek ? (
-            <p className="truncate text-xs text-slate-400">{header.matchweek}</p>
-          ) : (
-            <p className="truncate text-xs text-slate-500">
-              {source === "sample"
-                ? "Hasil — data demo"
-                : "Hasil — data dari Sheet"}
-            </p>
-          )}
+          <p className="truncate text-xs text-slate-400">
+            {activeMatch
+              ? headerLeagueSubtitle(activeMatch)
+              : source === "sample"
+                ? `Papan ${activeIndex + 1} kosong — data demo`
+                : source === "sheet"
+                  ? `Papan ${activeIndex + 1} kosong — isi dari Sheet`
+                  : `Papan ${activeIndex + 1}`}
+          </p>
         </div>
         <AccountAvatar />
       </header>
@@ -240,11 +268,11 @@ export function MatchViewer() {
         </div>
       ) : (
         <section
-          className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#12151c]/95"
+          className="result-panel-field grid min-h-0 flex-1 content-start grid-rows-[auto_auto_auto_auto] overflow-hidden rounded-2xl border border-white/[0.08]"
           aria-label="Hasil pertandingan"
         >
           {/* 2) Papan skor: logo & nama H/A, skor, caption (Full Time); geser + auto-slide; dot di bawahnya */}
-          <div className="min-w-0 shrink-0 border-b border-white/[0.06] px-0 pb-2 pt-2">
+          <div className="min-w-0 min-h-0 border-b border-white/[0.06] px-0 pb-2 pt-2">
             <div
               className="min-w-0 touch-pan-x"
               onTouchStart={scheduleResumeAuto}
@@ -296,7 +324,7 @@ export function MatchViewer() {
                     onClick={() => goToSlide(i)}
                     className={`h-2 w-2 shrink-0 rounded-full transition-all ${
                       i === activeIndex
-                        ? "w-6 bg-orange-500"
+                        ? "w-6 bg-brand-400"
                         : "bg-white/25 hover:bg-white/40"
                     }`}
                   />
@@ -306,7 +334,7 @@ export function MatchViewer() {
           </div>
 
           {/* 3) Caption pertandingan aktif (kiri) + nama akun (kanan); lalu 4 bookmark */}
-          <div className="shrink-0 px-2 pt-2 sm:px-3">
+          <div className="min-h-0 px-2 pt-2 sm:px-3">
             <div className="mb-2 flex items-center justify-between gap-2 px-1">
               <p className="min-w-0 flex-1 text-left text-[11px] font-medium leading-snug text-slate-300">
                 {activeMatch ? (
@@ -320,7 +348,7 @@ export function MatchViewer() {
                 )}
               </p>
               <span
-                className="shrink-0 text-right text-[11px] font-bold tracking-tight text-cyan-400 drop-shadow-[0_0_12px_rgba(34,211,238,0.35)]"
+                className="shrink-0 text-right text-[11px] font-bold tracking-tight text-brand-400 drop-shadow-[0_0_14px_var(--accent-glow)]"
                 aria-label="Nama akun"
               >
                 {ACCOUNT_DISPLAY_NAME}
@@ -332,20 +360,16 @@ export function MatchViewer() {
               disabled={!activeMatch}
             />
           </div>
-          <div className="h-px shrink-0 bg-white/[0.08]" aria-hidden />
+          <div className="h-px min-h-0 bg-white/[0.08]" aria-hidden />
 
-          {/* 4) Konten bookmark — scroll vertikal hanya di sini bila konten panjang */}
+          {/* 4) Card bookmark dibatasi tinggi tetap; sisa area sengaja kosong sebelum tombol bawah */}
           <div
-            className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden overscroll-y-contain px-2 py-2 sm:px-3 [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.35)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600/50"
+            className="flex h-[clamp(17.5rem,44dvh,23rem)] min-h-0 min-w-0 flex-col overflow-hidden px-2 py-2 sm:h-[clamp(18.5rem,46dvh,24.5rem)] sm:px-3"
             role="region"
-            aria-label="Konten tab"
+            aria-label="Tab content"
           >
             {activeMatch ? (
-              <MatchDetailTabContent
-                tab={detailTab}
-                homeName={activeMatch.home_name}
-                awayName={activeMatch.away_name}
-              />
+              <MatchDetailTabContent tab={detailTab} match={activeMatch} />
             ) : (
               <p className="py-4 text-center text-sm text-slate-400">
                 Tambahkan skor di sheet untuk mengaktifkan tombol dan konten di papan
