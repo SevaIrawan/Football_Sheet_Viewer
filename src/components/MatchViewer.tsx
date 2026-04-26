@@ -277,11 +277,11 @@ export function MatchViewer() {
             logoKey={activeMatch.league_logo_key}
             logoUrl={activeMatch.league_logo_url}
             label={activeMatch.league_name || "Liga"}
-            className={`${HEADER_LOGO_MATCH_SIZE} mt-0.5 shrink-0 rounded-full object-cover ring-2 ring-white/[0.12]`}
+            className={`${HEADER_LOGO_MATCH_SIZE} mt-0.5 shrink-0`}
           />
         ) : (
           <div
-            className={`${HEADER_LOGO_MATCH_SIZE} mt-0.5 shrink-0 rounded-full border border-white/10 bg-white/[0.04] ring-2 ring-white/[0.06]`}
+            className={`${HEADER_LOGO_MATCH_SIZE} mt-0.5 shrink-0 rounded-xl bg-white/[0.03]`}
             aria-hidden
           />
         )}

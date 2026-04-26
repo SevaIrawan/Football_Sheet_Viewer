@@ -260,7 +260,7 @@ export function MatchScoreEmptySlide({ panelNumber }: { panelNumber: number }) {
         <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-2 sm:gap-4">
           <div className="flex min-w-0 flex-col items-center gap-3 text-center">
             <div
-              className="flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] ring-2 ring-white/[0.06]"
+              className="flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center rounded-xl bg-white/[0.03]"
               aria-hidden
             />
             <p className="w-full text-[13px] font-medium text-slate-500 sm:text-sm">
@@ -281,7 +281,7 @@ export function MatchScoreEmptySlide({ panelNumber }: { panelNumber: number }) {
 
           <div className="flex min-w-0 flex-col items-center gap-3 text-center">
             <div
-              className="flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.04] ring-2 ring-white/[0.06]"
+              className="flex h-[4.25rem] w-[4.25rem] shrink-0 items-center justify-center rounded-xl bg-white/[0.03]"
               aria-hidden
             />
             <p className="w-full text-[13px] font-medium text-slate-500 sm:text-sm">
@@ -316,7 +316,7 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
               logoKey={m.home_logo_key}
               logoUrl={m.home_logo_url}
               label={m.home_name}
-              className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-white/[0.12] sm:h-[4.25rem] sm:w-[4.25rem]"
+              className="h-14 w-14 shrink-0 sm:h-[4.25rem] sm:w-[4.25rem]"
             />
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
               {m.home_name}
@@ -347,7 +347,7 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
               logoKey={m.away_logo_key}
               logoUrl={m.away_logo_url}
               label={m.away_name}
-              className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-white/[0.12] sm:h-[4.25rem] sm:w-[4.25rem]"
+              className="h-14 w-14 shrink-0 sm:h-[4.25rem] sm:w-[4.25rem]"
             />
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
               {m.away_name}
@@ -444,7 +444,7 @@ function MatchScheduleCard({ m }: { m: MatchRow }) {
             logoKey={m.home_logo_key}
             logoUrl={m.home_logo_url}
             label={m.home_name}
-            className="h-12 w-12 rounded-full object-cover ring-2 ring-white/[0.1]"
+            className="h-12 w-12 shrink-0"
           />
           <p className="w-full truncate text-xs font-semibold text-white">
             {m.home_name}
@@ -461,7 +461,7 @@ function MatchScheduleCard({ m }: { m: MatchRow }) {
             logoKey={m.away_logo_key}
             logoUrl={m.away_logo_url}
             label={m.away_name}
-            className="h-12 w-12 rounded-full object-cover ring-2 ring-white/[0.1]"
+            className="h-12 w-12 shrink-0"
           />
           <p className="w-full truncate text-xs font-semibold text-white">
             {m.away_name}

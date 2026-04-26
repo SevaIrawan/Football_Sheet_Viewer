@@ -54,7 +54,7 @@ export function LogoImg({
   if ((!hasRemote && !logoKey) || (!hasRemote && i >= EXT.length)) {
     return (
       <div
-        className={`flex items-center justify-center bg-white/10 text-sm font-bold text-white/80 ${className}`}
+        className={`flex items-center justify-center rounded-lg bg-white/10 text-sm font-bold text-white/80 ${className}`}
         aria-hidden
       >
         {initials}
