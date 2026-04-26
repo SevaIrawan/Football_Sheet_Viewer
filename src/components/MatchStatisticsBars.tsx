@@ -77,11 +77,12 @@ function parseRankForCompare(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-const LEAGUE_RANK_LABEL = "League rank";
-const LEAGUE_RANK_HINT =
-  "League position after this match. Smaller number = higher on the table (1 is best).";
+/** Label netral: cocok liga, grup (Euro/World Cup), atau posisi lain dari sheet. */
+const RANK_LABEL = "Rank";
+const RANK_HINT =
+  "Team position after this match (league table, group standing, or your sheet meaning). When both are numbers, smaller = higher on the table (1 is best).";
 
-/** Satu baris tambahan: peringkat liga (nilai lebih kecil = lebih atas). */
+/** Satu baris tambahan: peringkat / posisi (nilai dari sheet; angka lebih kecil = lebih atas saat keduanya angka). */
 function StandingBarRow({
   homeRank,
   awayRank,
@@ -125,7 +126,7 @@ function StandingBarRow({
   const displayAway = aRaw || "—";
 
   return (
-    <div className={STAT_ROW_GRID} title={LEAGUE_RANK_HINT}>
+    <div className={STAT_ROW_GRID} title={RANK_HINT}>
       <span
         className={`text-right text-sm font-bold tabular-nums leading-none sm:text-base ${
           homeBetter && !tie ? "text-white" : "text-slate-500"
@@ -141,9 +142,9 @@ function StandingBarRow({
       </div>
       <span
         className="hyphens-auto px-0.5 text-center text-[10.5px] font-semibold leading-tight text-slate-300 [overflow-wrap:anywhere] sm:text-[11.5px]"
-        title={LEAGUE_RANK_HINT}
+        title={RANK_HINT}
       >
-        {LEAGUE_RANK_LABEL}
+        {RANK_LABEL}
       </span>
       <div className="flex h-[5px] min-h-[5px] items-stretch justify-start overflow-hidden rounded-r-full bg-white/[0.08] sm:h-[6px]">
         <div
@@ -162,7 +163,7 @@ function StandingBarRow({
   );
 }
 
-/** 6 baris statistik + 1 baris League rank (satu `ul`, format sama). */
+/** 6 baris statistik + 1 baris Rank (satu `ul`, format sama). */
 export function MatchStatisticsBars({
   statistics,
   homeLeagueRank,
@@ -189,7 +190,7 @@ export function MatchStatisticsBars({
       })}
       <li
         className="border-b border-white/[0.05] last:border-b-0"
-        aria-label={`${LEAGUE_RANK_LABEL}. ${LEAGUE_RANK_HINT}`}
+        aria-label={`${RANK_LABEL}. ${RANK_HINT}`}
       >
         <StandingBarRow homeRank={homeLeagueRank} awayRank={awayLeagueRank} />
       </li>

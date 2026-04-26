@@ -45,7 +45,7 @@ export type MatchRow = {
   /** Teks persis dari kolom sheet (prioritas tampil di kartu skor). */
   home_goal_scorers_text?: string;
   away_goal_scorers_text?: string;
-  /** Tab Statistics — header sheet: `home_league_rank` / `away_league_rank`. Angka saja atau teks dengan sufiks (mis. `2nd`, `4th`). */
+  /** Tab Statistics — header sheet: `home_league_rank` / `away_league_rank` (nama kolom tetap; UI menampilkan “Rank” umum untuk liga / grup / Piala). */
   home_league_rank?: string;
   away_league_rank?: string;
 };

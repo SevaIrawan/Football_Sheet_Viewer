@@ -1,5 +1,5 @@
 /**
- * Layout bookmark hasil: Statistics (6 bar + League rank) menjadi acuan tinggi minimum
+ * Layout bookmark hasil: Statistics (6 bar + Rank) menjadi acuan tinggi minimum
  * area konten; tab lain mengikuti supaya ukuran “halaman” bookmark seragam.
  *
  * Scroll vertikal: host pakai overflow dinamis (`auto` vs `hidden`) setelah ukur
