@@ -42,7 +42,7 @@ body {
 }
 
 /**
- * Kartu skor hasil: gradien halus + siluet "lapangan" (garis tengah + lingkar tengah sangat redup).
+ * Kartu skor hasil: gradien halus + siluet (lingkar tengah sangat redup, tanpa garis vertikal penuh).
  * Hanya CSS — ringan, tidak perlu asset gambar; kontras teks putih tetap aman.
  */
 .score-card-field {
@@ -54,13 +54,6 @@ body {
       rgba(255, 255, 255, 0.05) 28.5%,
       rgba(255, 255, 255, 0.05) 32.5%,
       transparent 33%
-    ),
-    linear-gradient(
-      90deg,
-      transparent 49.35%,
-      rgba(255, 255, 255, 0.07) 49.35%,
-      rgba(255, 255, 255, 0.07) 50.65%,
-      transparent 50.65%
     ),
     repeating-linear-gradient(
       -6deg,
@@ -103,20 +96,6 @@ body {
       rgba(255, 255, 255, 0.006) 10px,
       rgba(255, 255, 255, 0.006) 11px
     ),
-    repeating-linear-gradient(
-      90deg,
-      transparent,
-      transparent 9px,
-      rgba(255, 255, 255, 0.005) 9px,
-      rgba(255, 255, 255, 0.005) 10px
-    ),
-    repeating-linear-gradient(
-      0deg,
-      transparent,
-      transparent 9px,
-      rgba(255, 255, 255, 0.004) 9px,
-      rgba(255, 255, 255, 0.004) 10px
-    ),
     radial-gradient(
       ellipse 130% 100% at 12% 40%,
       rgba(255, 255, 255, 0.04),
@@ -152,13 +131,6 @@ body {
       rgba(255, 255, 255, 0.035) 31%,
       transparent 31.5%
     ),
-    linear-gradient(
-      90deg,
-      transparent 49.4%,
-      rgba(255, 255, 255, 0.05) 49.4%,
-      rgba(255, 255, 255, 0.05) 50.6%,
-      transparent 50.6%
-    ),
     repeating-linear-gradient(
       -6deg,
       transparent,
@@ -188,13 +160,6 @@ body {
       rgba(255, 255, 255, 0.028) 32.5%,
       transparent 33.1%
     ),
-    linear-gradient(
-      90deg,
-      transparent 49.45%,
-      rgba(255, 255, 255, 0.032) 49.45%,
-      rgba(255, 255, 255, 0.032) 50.55%,
-      transparent 50.55%
-    ),
     repeating-linear-gradient(
       -6deg,
       transparent,
@@ -223,13 +188,6 @@ body {
       rgba(255, 255, 255, 0.018) 31.6%,
       rgba(255, 255, 255, 0.018) 34.3%,
       transparent 34.9%
-    ),
-    linear-gradient(
-      90deg,
-      transparent 49.6%,
-      rgba(255, 255, 255, 0.02) 49.6%,
-      rgba(255, 255, 255, 0.02) 50.4%,
-      transparent 50.4%
     ),
     repeating-linear-gradient(
       -6deg,
