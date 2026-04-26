@@ -4,6 +4,7 @@ import type { GoalScorer, MatchRow } from "@/lib/types";
 import { MatchStatisticsBars } from "@/components/MatchStatisticsBars";
 import { getMatchStatistics } from "@/lib/matchStatistics";
 import { LogoImg } from "@/components/LogoImg";
+import { ScorecardFootballIcon } from "@/components/ScorecardFootballIcon";
 
 export function hasScore(m: MatchRow): boolean {
   return (
@@ -299,16 +300,14 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
   const subtitle = statusSubtitle(m, true);
   const homeGoals = scoreCardSideGoalsText(m, "home");
   const awayGoals = scoreCardSideGoalsText(m, "away");
+  const hasGoalDetails = Boolean(homeGoals || awayGoals);
 
   const goalLineClass =
-    "line-clamp-3 w-full max-w-[11rem] break-words px-0.5 text-[9px] font-medium leading-snug text-slate-400 sm:max-w-[13rem] sm:text-[10px]";
-  /** Slot tinggi tetap (~3 baris) supaya kartu stabil saat 0-0 / tanpa pencetak gol. */
-  const goalSlotClass =
-    "flex min-h-[2.875rem] w-full max-w-[11rem] flex-col justify-start sm:min-h-[3.1rem] sm:max-w-[13rem]";
+    "line-clamp-3 w-full min-w-0 break-words text-[9px] font-medium leading-snug text-slate-400 sm:text-[10px]";
 
   return (
     <article className="score-card-field w-full min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] shadow-lg shadow-black/30">
-      <div className="px-3 pb-5 pt-5 sm:px-4 sm:pb-6 sm:pt-6">
+      <div className="px-3 pb-3 pt-5 sm:px-4 sm:pb-4 sm:pt-6">
         <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-1.5 sm:gap-3">
           <div className="flex min-w-0 flex-col items-center gap-1 text-center sm:gap-1.5">
             <LogoImg
@@ -321,13 +320,6 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
               {m.home_name}
             </p>
-            <div className={`${goalSlotClass} items-end`}>
-              {homeGoals ? (
-                <p className={`${goalLineClass} text-right`} title={homeGoals}>
-                  {homeGoals}
-                </p>
-              ) : null}
-            </div>
           </div>
 
           <div className="flex min-w-[4.75rem] flex-col items-center justify-center gap-0.5 px-0.5 pt-0.5 sm:min-w-[5.25rem] sm:gap-1 sm:px-1 sm:pt-1">
@@ -352,16 +344,51 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
               {m.away_name}
             </p>
-            <div className={`${goalSlotClass} items-start`}>
-              {awayGoals ? (
-                <p className={`${goalLineClass} text-left`} title={awayGoals}>
-                  {awayGoals}
-                </p>
-              ) : null}
-            </div>
           </div>
         </div>
       </div>
+
+      {hasGoalDetails ? (
+        <>
+          <div
+            className="mx-3 h-px shrink-0 bg-white/[0.08] sm:mx-4"
+            role="separator"
+            aria-hidden
+          />
+          <div className="px-2 pb-3 pt-2 sm:px-3 sm:pb-4 sm:pt-2.5">
+            <div
+              className="score-card-goals-field overflow-hidden rounded-xl border border-white/[0.06] shadow-inner shadow-black/20"
+              aria-label="Pencetak gol"
+            >
+              <div className="grid grid-cols-[1fr_auto_1fr] items-stretch gap-x-1.5 gap-y-1 px-2 py-2.5 sm:gap-x-2 sm:px-3 sm:py-3">
+                <p
+                  className={`${goalLineClass} self-center text-right`}
+                  title={homeGoals || undefined}
+                >
+                  {homeGoals || (
+                    <span className="text-slate-600">&nbsp;</span>
+                  )}
+                </p>
+                <div className="relative flex min-w-[2.25rem] shrink-0 items-center justify-center self-stretch px-1 sm:min-w-10">
+                  <span
+                    className="pointer-events-none absolute left-1/2 top-2 bottom-2 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/[0.14] to-transparent sm:top-2.5 sm:bottom-2.5"
+                    aria-hidden
+                  />
+                  <ScorecardFootballIcon className="relative z-10 h-6 w-6 shrink-0 sm:h-7 sm:w-7" />
+                </div>
+                <p
+                  className={`${goalLineClass} self-center text-left`}
+                  title={awayGoals || undefined}
+                >
+                  {awayGoals || (
+                    <span className="text-slate-600">&nbsp;</span>
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      ) : null}
     </article>
   );
 }

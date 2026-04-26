@@ -82,6 +82,66 @@ body {
     linear-gradient(158deg, #1d212b 0%, #1a1d26 45%, #161920 100%);
 }
 
+/**
+ * Sub-kartu pencetak gol (bawah kartu skor): siluet halus + sedikit beda dari area atas.
+ */
+.score-card-goals-field {
+  background-color: #11141b;
+  background-image:
+    /* Siluet mesh / honeycomb sangat halus (kombinasi sudut + grid) */
+    repeating-linear-gradient(
+      60deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.007) 10px,
+      rgba(255, 255, 255, 0.007) 11px
+    ),
+    repeating-linear-gradient(
+      -60deg,
+      transparent,
+      transparent 10px,
+      rgba(255, 255, 255, 0.006) 10px,
+      rgba(255, 255, 255, 0.006) 11px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 9px,
+      rgba(255, 255, 255, 0.005) 9px,
+      rgba(255, 255, 255, 0.005) 10px
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 9px,
+      rgba(255, 255, 255, 0.004) 9px,
+      rgba(255, 255, 255, 0.004) 10px
+    ),
+    radial-gradient(
+      ellipse 130% 100% at 12% 40%,
+      rgba(255, 255, 255, 0.04),
+      transparent 52%
+    ),
+    radial-gradient(
+      ellipse 110% 90% at 92% 55%,
+      rgba(255, 255, 255, 0.032),
+      transparent 48%
+    ),
+    radial-gradient(
+      ellipse 80% 55% at 50% 0%,
+      rgba(255, 255, 255, 0.024),
+      transparent 70%
+    ),
+    repeating-linear-gradient(
+      118deg,
+      transparent,
+      transparent 11px,
+      rgba(255, 255, 255, 0.009) 11px,
+      rgba(255, 255, 255, 0.009) 12px
+    ),
+    linear-gradient(168deg, #13161e 0%, #10131a 55%, #0d1016 100%);
+}
+
 .score-card-field-empty {
   background-color: #141820;
   background-image:
