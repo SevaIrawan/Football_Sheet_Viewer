@@ -36,7 +36,7 @@ export type MatchRow = {
   away_score: string;
   kickoff: string;
   status: string;
-  /** Kontrol pipeline render video short. */
+  /** Kontrol pipeline slide / video short (`generate_video` atau alias sheet `video_generate`). */
   generate_video?: GenerateVideoStatus | string;
   /** Opsional — dari database / API; tanpa ini bar tampil 0. */
   statistics?: MatchStatistics | null;

@@ -12,6 +12,8 @@ type Props = {
   logoUrl?: string;
   label: string;
   className?: string;
+  /** Carousel off-screen: `lazy` mengurangi fetch gambar yang tidak terlihat. */
+  loading?: "lazy" | "eager";
 };
 
 export function LogoImg({
@@ -20,6 +22,7 @@ export function LogoImg({
   logoUrl = "",
   label,
   className = "",
+  loading = "eager",
 }: Props) {
   const base = `/logos/${kind}/${logoKey || "_"}`;
   const [i, setI] = useState(0);
@@ -68,6 +71,7 @@ export function LogoImg({
       src={src}
       alt=""
       className={`object-contain ${className}`}
+      loading={loading}
       referrerPolicy="no-referrer"
       decoding="async"
       onError={onError}

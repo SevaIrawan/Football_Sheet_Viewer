@@ -6,15 +6,14 @@ import {
   getGoogleSheetsConfigHint,
   isGoogleSheetsApiConfigured,
 } from "@/lib/googleSheets";
+import { isGenerateVideoYes } from "@/lib/matchVideo";
 import type { MatchRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 function filterGenerateVideoYes(rows: MatchRow[]): MatchRow[] {
-  return rows.filter(
-    (r) => (r.generate_video ?? "").toString().trim().toUpperCase() === "YES",
-  );
+  return rows.filter((r) => isGenerateVideoYes(r));
 }
 
 type SheetSource = "sheet_api" | "sheet_csv" | "sample";
@@ -33,7 +32,8 @@ export async function GET() {
             rows: [],
             source: "sheet_api" as const,
             range: matrix.range,
-            error: "Tidak ada baris dengan generate_video = YES.",
+            error:
+              "Tidak ada baris dengan generate_video / video_generate = YES.",
           });
         }
         return NextResponse.json({
@@ -76,7 +76,7 @@ export async function GET() {
           source: "sheet_csv" as const,
           error: buildFallbackError(
             lastError,
-            "Tidak ada baris dengan generate_video = YES.",
+            "Tidak ada baris dengan generate_video / video_generate = YES.",
           ),
         });
       }

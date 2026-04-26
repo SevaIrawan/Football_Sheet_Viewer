@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { memo, useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { GoalScorer, MatchRow } from "@/lib/types";
 import {
   bookmarkPageBodyClasses,
@@ -292,11 +292,8 @@ function KlasemenLongPlaceholder() {
   );
 }
 
-/** Jumlah papan skor tetap di carousel (hasil). */
-export const SCORE_PANEL_COUNT = 6;
-
 /** Papan skor kosong — slot tanpa data hasil di sheet. */
-export function MatchScoreEmptySlide({ panelNumber }: { panelNumber: number }) {
+function MatchScoreEmptySlideInner({ panelNumber }: { panelNumber: number }) {
   return (
     <article className="score-card-field-empty w-full min-w-0 overflow-hidden rounded-2xl border border-dashed border-white/20 shadow-lg shadow-black/25">
       <div className="px-4 pb-6 pt-6 sm:px-5">
@@ -340,8 +337,16 @@ export function MatchScoreEmptySlide({ panelNumber }: { panelNumber: number }) {
   );
 }
 
+export const MatchScoreEmptySlide = memo(MatchScoreEmptySlideInner);
+
 /** Hanya papan skor — satu slide per pertandingan (carousel). */
-export function MatchScoreSlide({ m }: { m: MatchRow }) {
+function MatchScoreSlideInner({
+  m,
+  logoLoading = "eager",
+}: {
+  m: MatchRow;
+  logoLoading?: "lazy" | "eager";
+}) {
   const subtitle = statusSubtitle(m, true);
   const homeGoals = scoreCardSideGoalsText(m, "home");
   const awayGoals = scoreCardSideGoalsText(m, "away");
@@ -360,6 +365,7 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
               logoKey={m.home_logo_key}
               logoUrl={m.home_logo_url}
               label={m.home_name}
+              loading={logoLoading}
               className="h-14 w-14 shrink-0 sm:h-[4.25rem] sm:w-[4.25rem]"
             />
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
@@ -384,6 +390,7 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
               logoKey={m.away_logo_key}
               logoUrl={m.away_logo_url}
               label={m.away_name}
+              loading={logoLoading}
               className="h-14 w-14 shrink-0 sm:h-[4.25rem] sm:w-[4.25rem]"
             />
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
@@ -437,6 +444,8 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
     </article>
   );
 }
+
+export const MatchScoreSlide = memo(MatchScoreSlideInner);
 
 export function MatchDetailTabNav({
   activeTab,

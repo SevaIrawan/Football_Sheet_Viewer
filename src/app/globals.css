@@ -134,6 +134,14 @@ body {
     linear-gradient(168deg, #13161e 0%, #10131a 55%, #0d1016 100%);
 }
 
+/**
+ * Panel horizontal carousel skor: browser boleh menunda layout/paint slide di luar viewport.
+ */
+.score-carousel-panel {
+  content-visibility: auto;
+  contain-intrinsic-block-size: 15rem;
+}
+
 .score-card-field-empty {
   background-color: #141820;
   background-image:

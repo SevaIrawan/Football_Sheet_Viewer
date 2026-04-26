@@ -8,7 +8,9 @@ import {
   useRef,
   useState,
 } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { MatchRow } from "@/lib/types";
+import { isGenerateVideoYes } from "@/lib/matchVideo";
 import {
   AccountAvatar,
   HEADER_LOGO_MATCH_SIZE,
@@ -20,12 +22,14 @@ import {
   MatchDetailTabNav,
   MatchScoreEmptySlide,
   MatchScoreSlide,
-  SCORE_PANEL_COUNT,
   type ResultTabId,
 } from "@/components/MatchPanel";
 
 const AUTO_ADVANCE_MS = 9000;
 const PAUSE_AUTO_AFTER_INTERACTION_MS = 12000;
+
+/** Di atas ini: navigasi titik diganti tombol ± (kurangi DOM untuk ratusan slide). */
+const CAROUSEL_MAX_DOT_BUTTONS = 24;
 
 /** Nama akun tampilan (statis) — sejajar caption pertandingan aktif */
 const ACCOUNT_DISPLAY_NAME = "Alzam Pro";
@@ -92,20 +96,15 @@ function getSlideStepPx(el: HTMLDivElement): number {
   return first.offsetWidth;
 }
 
-function readActiveSlideIndex(el: HTMLDivElement): number {
+function readActiveSlideIndex(
+  el: HTMLDivElement,
+  slideCount: number,
+): number {
+  if (slideCount <= 0) return 0;
   const step = getSlideStepPx(el);
   if (step <= 0) return 0;
   const idx = Math.round(el.scrollLeft / step);
-  return Math.min(Math.max(0, idx), SCORE_PANEL_COUNT - 1);
-}
-
-function buildScoreSlides(results: MatchRow[]): (MatchRow | null)[] {
-  const filled = results.slice(0, SCORE_PANEL_COUNT);
-  const out: (MatchRow | null)[] = [...filled];
-  while (out.length < SCORE_PANEL_COUNT) {
-    out.push(null);
-  }
-  return out;
+  return Math.min(Math.max(0, idx), slideCount - 1);
 }
 
 export function MatchViewer() {
@@ -117,6 +116,7 @@ export function MatchViewer() {
   const [detailTab, setDetailTab] = useState<ResultTabId>("statistik");
 
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const slidesLengthRef = useRef(0);
   const activeIndexRef = useRef(activeIndex);
   activeIndexRef.current = activeIndex;
   const pauseAutoRef = useRef(false);
@@ -147,12 +147,17 @@ export function MatchViewer() {
     void load();
   }, [load]);
 
-  const results = useMemo(
-    () => (rows ?? []).filter((m) => hasScore(m)),
+  /**
+   * Papan carousel: baris dari sheet/API yang sudah YES (API memfilter), plus skor
+   * terisi — filter ganda agar aman bila sumber data berubah. Urutan = urutan sheet.
+   */
+  const slides = useMemo(
+    () =>
+      (rows ?? []).filter((m) => hasScore(m) && isGenerateVideoYes(m)),
     [rows],
   );
-
-  const slides = useMemo(() => buildScoreSlides(results), [results]);
+  const slideCount = slides.length;
+  slidesLengthRef.current = slideCount;
 
   useEffect(() => {
     setDetailTab("statistik");
@@ -169,16 +174,18 @@ export function MatchViewer() {
 
   const snapCarouselToIndex = useCallback((index: number) => {
     const el = scrollerRef.current;
-    if (!el) return;
+    const n = slidesLengthRef.current;
+    if (!el || n <= 0) return;
     const step = getSlideStepPx(el);
     if (step <= 0) return;
-    const clamped = Math.min(Math.max(0, index), SCORE_PANEL_COUNT - 1);
+    const clamped = Math.min(Math.max(0, index), n - 1);
     el.scrollTo({ left: clamped * step, behavior: "auto" });
     setActiveIndex(clamped);
   }, []);
 
   useLayoutEffect(() => {
-    const max = SCORE_PANEL_COUNT - 1;
+    const n = slideCount;
+    const max = Math.max(0, n - 1);
     const clamped = Math.min(Math.max(0, activeIndex), max);
     if (clamped !== activeIndex) {
       setActiveIndex(clamped);
@@ -186,12 +193,12 @@ export function MatchViewer() {
         snapCarouselToIndex(clamped);
       });
     }
-  }, [activeIndex, snapCarouselToIndex]);
+  }, [activeIndex, slideCount, snapCarouselToIndex]);
 
   const syncIndexFromScroll = useCallback(() => {
     const el = scrollerRef.current;
     if (!el) return;
-    setActiveIndex(readActiveSlideIndex(el));
+    setActiveIndex(readActiveSlideIndex(el, slidesLengthRef.current));
   }, []);
 
   const onScrollCarousel = useCallback(() => {
@@ -207,18 +214,18 @@ export function MatchViewer() {
     requestAnimationFrame(() => {
       snapCarouselToIndex(activeIndexRef.current);
     });
-  }, [loading, snapCarouselToIndex]);
+  }, [loading, slideCount, snapCarouselToIndex]);
 
   useLayoutEffect(() => {
     if (loading) return;
     const id = requestAnimationFrame(() => {
       const el = scrollerRef.current;
       if (!el) return;
-      const idx = readActiveSlideIndex(el);
+      const idx = readActiveSlideIndex(el, slidesLengthRef.current);
       setActiveIndex((prev) => (prev !== idx ? idx : prev));
     });
     return () => cancelAnimationFrame(id);
-  }, [loading]);
+  }, [loading, slideCount]);
 
   useEffect(
     () => () => {
@@ -231,12 +238,11 @@ export function MatchViewer() {
   const goToSlide = useCallback(
     (index: number) => {
       const el = scrollerRef.current;
-      if (!el) return;
+      const n = slidesLengthRef.current;
+      if (!el || n <= 0) return;
       const step = getSlideStepPx(el);
-      const clamped = Math.min(
-        Math.max(0, index),
-        SCORE_PANEL_COUNT - 1,
-      );
+      if (step <= 0) return;
+      const clamped = Math.min(Math.max(0, index), n - 1);
       el.scrollTo({ left: clamped * step, behavior: "smooth" });
       setActiveIndex(clamped);
       scheduleResumeAuto();
@@ -249,21 +255,24 @@ export function MatchViewer() {
       typeof window !== "undefined" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduced) return;
+    if (slideCount <= 1) return;
 
     const id = window.setInterval(() => {
       if (pauseAutoRef.current) return;
       const el = scrollerRef.current;
       if (!el) return;
+      const n = slidesLengthRef.current;
+      if (n <= 1) return;
       const step = getSlideStepPx(el);
       if (step <= 0) return;
-      const idx = readActiveSlideIndex(el);
-      const next = (idx + 1) % SCORE_PANEL_COUNT;
+      const idx = readActiveSlideIndex(el, n);
+      const next = (idx + 1) % n;
       el.scrollTo({ left: next * step, behavior: "smooth" });
       setActiveIndex(next);
     }, AUTO_ADVANCE_MS);
 
     return () => window.clearInterval(id);
-  }, []);
+  }, [slideCount]);
 
   const activeMatch = slides[activeIndex];
   const leagueCaption = activeMatch ? headerLeagueCaption(activeMatch) : null;
@@ -356,22 +365,25 @@ export function MatchViewer() {
                 onScroll={onScrollCarousel}
                 className="flex w-full min-w-0 snap-x snap-mandatory overflow-x-auto scroll-smooth [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
               >
-                {slides.map((m, i) => (
-                  <div
-                    key={
-                      m
-                        ? `${m.home_name}-${m.away_name}-${m.kickoff}-${i}`
-                        : `empty-${i}`
-                    }
-                    className="box-border flex w-full min-w-0 shrink-0 grow-0 basis-full snap-start snap-always flex-col items-stretch justify-center px-2 sm:px-3"
-                  >
-                    {m ? (
-                      <MatchScoreSlide m={m} />
-                    ) : (
-                      <MatchScoreEmptySlide panelNumber={i + 1} />
-                    )}
+                {slideCount === 0 ? (
+                  <div className="score-carousel-panel box-border flex w-full min-w-0 shrink-0 grow-0 basis-full snap-start snap-always flex-col items-stretch justify-center px-2 sm:px-3">
+                    <MatchScoreEmptySlide panelNumber={1} />
                   </div>
-                ))}
+                ) : (
+                  slides.map((m, i) => (
+                    <div
+                      key={`${m.home_name}-${m.away_name}-${m.kickoff}-${i}`}
+                      className="score-carousel-panel box-border flex w-full min-w-0 shrink-0 grow-0 basis-full snap-start snap-always flex-col items-stretch justify-center px-2 sm:px-3"
+                    >
+                      <MatchScoreSlide
+                        m={m}
+                        logoLoading={
+                          Math.abs(i - activeIndex) <= 1 ? "eager" : "lazy"
+                        }
+                      />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -380,23 +392,47 @@ export function MatchViewer() {
               aria-label="Indeks papan skor"
             >
               <span className="text-xs font-medium text-slate-500">
-                {activeIndex + 1} / {SCORE_PANEL_COUNT}
+                {slideCount === 0 ? "0" : activeIndex + 1} / {slideCount}
               </span>
-              <div className="flex max-w-full gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {slides.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    aria-label={`Papan skor ${i + 1}`}
-                    aria-current={i === activeIndex ? "true" : undefined}
-                    onClick={() => goToSlide(i)}
-                    className={`h-2 w-2 shrink-0 rounded-full transition-all ${
-                      i === activeIndex
-                        ? "w-6 bg-brand-400"
-                        : "bg-white/25 hover:bg-white/40"
-                    }`}
-                  />
-                ))}
+              <div className="flex max-w-full items-center gap-1.5 overflow-x-auto px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {slideCount > 0 && slideCount <= CAROUSEL_MAX_DOT_BUTTONS
+                  ? slides.map((_, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        aria-label={`Papan skor ${i + 1}`}
+                        aria-current={i === activeIndex ? "true" : undefined}
+                        onClick={() => goToSlide(i)}
+                        className={`h-2 w-2 shrink-0 rounded-full transition-all ${
+                          i === activeIndex
+                            ? "w-6 bg-brand-400"
+                            : "bg-white/25 hover:bg-white/40"
+                        }`}
+                      />
+                    ))
+                  : null}
+                {slideCount > CAROUSEL_MAX_DOT_BUTTONS ? (
+                  <div className="flex shrink-0 items-center gap-0.5">
+                    <button
+                      type="button"
+                      aria-label="Papan sebelumnya"
+                      disabled={activeIndex <= 0}
+                      onClick={() => goToSlide(activeIndex - 1)}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition enabled:hover:bg-white/[0.08] enabled:hover:text-white disabled:opacity-35"
+                    >
+                      <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Papan berikutnya"
+                      disabled={activeIndex >= slideCount - 1}
+                      onClick={() => goToSlide(activeIndex + 1)}
+                      className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 transition enabled:hover:bg-white/[0.08] enabled:hover:text-white disabled:opacity-35"
+                    >
+                      <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
@@ -440,8 +476,9 @@ export function MatchViewer() {
               <MatchDetailTabContent tab={detailTab} match={activeMatch} />
             ) : (
               <p className="shrink-0 py-4 text-center text-sm text-slate-400">
-                Tambahkan skor di sheet untuk mengaktifkan tombol dan konten di papan
-                ini.
+                {slideCount === 0
+                  ? "Tidak ada papan: pastikan baris punya skor dan kolom generate_video atau video_generate = YES."
+                  : "Tambahkan skor di sheet untuk mengaktifkan tombol dan konten di papan ini."}
               </p>
             )}
           </div>

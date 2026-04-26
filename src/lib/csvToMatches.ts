@@ -54,6 +54,8 @@ const FIELD_ALIASES: Record<string, MatchRowCsvKey> = {
   jadwal: "kickoff",
   status: "status",
   generate_video: "generate_video",
+  /** Alias header sheet (sama isi dengan `generate_video`). */
+  video_generate: "generate_video",
   /** Standing: satu nama header sheet kanonik (normalisasi → snake_case). */
   home_league_rank: "home_league_rank",
   away_league_rank: "away_league_rank",
@@ -105,7 +107,7 @@ function recordToMatch(row: Record<string, string>): MatchRow {
   if (hgs) out.home_goal_scorers_text = hgs;
   if (ags) out.away_goal_scorers_text = ags;
   out.generate_video = normalizeGenerateVideoStatus(
-    readFirst(r, ["generate_video"]),
+    readFirst(r, ["generate_video", "video_generate"]),
   );
   /** Standing — kolom sheet `home_league_rank` / `away_league_rank` (sumber kanonik). */
   const homeRank = readFirst(r, ["home_league_rank"]);

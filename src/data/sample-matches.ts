@@ -8,7 +8,7 @@ import {
   SAMPLE_STATS_MOCK_F,
 } from "@/lib/matchStatistics";
 
-/** Data demo jika `SHEET_CSV_URL` belum di-set. Enam baris ber-skor = enam papan hasil. */
+/** Data demo jika `SHEET_CSV_URL` belum di-set. Baris ber-skor + `generate_video: YES` = papan carousel. */
 export const SAMPLE_MATCHES: MatchRow[] = [
   {
     league_name: "Contoh Liga",
