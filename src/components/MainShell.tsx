@@ -11,11 +11,11 @@ export function MainShell() {
   const [page, setPage] = useState<MainPage>("result");
 
   return (
-    <div className="shorts-safe-gutter box-border flex min-h-0 h-[100dvh] w-full flex-col bg-[#030508]">
+    <div className="shorts-safe-gutter box-border flex h-[100dvh] min-h-0 w-full flex-col items-center justify-center bg-[#030508]">
       <div
-        className="mx-auto flex min-h-0 w-full max-w-[min(430px,100%)] flex-1 flex-col overflow-hidden rounded-2xl border-2 border-white/[0.16] bg-[#070d14] shadow-[0_0_48px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.07)]"
+        className="yt-shorts-frame mx-auto flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border-2 border-white/[0.16] bg-[#070d14] shadow-[0_0_48px_rgba(0,0,0,0.55),inset_0_1px_0_rgba(255,255,255,0.07)]"
         role="application"
-        aria-label="Football Sheet Viewer"
+        aria-label="Football Sheet Viewer — 9:16 YouTube Short"
       >
         <main
           id="main-content"

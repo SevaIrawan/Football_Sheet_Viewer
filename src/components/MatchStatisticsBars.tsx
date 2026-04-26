@@ -6,6 +6,7 @@ import type { MatchStatistics } from "@/lib/types";
 const STAT_ROW_GRID =
   "grid w-full grid-cols-[2rem_minmax(0,1fr)_minmax(5.25rem,7.75rem)_minmax(0,1fr)_2rem] items-center gap-x-2 py-2 sm:grid-cols-[2.25rem_minmax(0,1fr)_minmax(5.75rem,8.25rem)_minmax(0,1fr)_2.25rem] sm:gap-x-2.5 sm:py-2.5";
 
+/** Jika jumlah baris berubah, sesuaikan `bookmarkPageBodyMinClasses` di `@/lib/bookmarkLayout`. */
 const ROWS: { key: keyof MatchStatistics; label: string }[] = [
   { key: "shotsOnTarget", label: "Shots on target" },
   { key: "possessionPct", label: "Possession (%)" },

@@ -1,6 +1,10 @@
 "use client";
 
 import type { GoalScorer, MatchRow } from "@/lib/types";
+import {
+  bookmarkPageBodyClasses,
+  bookmarkPageScrollClasses,
+} from "@/lib/bookmarkLayout";
 import { MatchStatisticsBars } from "@/components/MatchStatisticsBars";
 import { getMatchStatistics } from "@/lib/matchStatistics";
 import { LogoImg } from "@/components/LogoImg";
@@ -67,26 +71,21 @@ const RESULT_TABS = [
 
 export type ResultTabId = (typeof RESULT_TABS)[number]["id"];
 
-const BOOKMARK_SCROLL =
-  "min-h-0 flex-1 overflow-y-auto overscroll-y-contain [scrollbar-width:thin] [scrollbar-color:rgba(148,163,184,0.35)_transparent] [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-slate-600/50";
-
 /**
- * Kartu bookmark: tinggi = slot grid (bukan konten). Border tetap; isi scroll di dalam.
+ * Kartu bookmark: mengisi sisa tinggi panel. Satu-satunya scroll vertikal hasil
+ * ada di `.bookmark-page-scroll`; area konten punya min-tinggi = acuan Statistics.
  */
-function ResultBookmarkCard({
-  noScroll = false,
-  children,
-}: {
-  noScroll?: boolean;
-  children: React.ReactNode;
-}) {
+function ResultBookmarkCard({ children }: { children: React.ReactNode }) {
   return (
-    <div className="bookmark-card-field relative flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] sm:rounded-xl">
+    <div className="bookmark-card-field relative flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] sm:rounded-xl">
       <BookmarkStadiumBg />
-      <div
-        className={`relative z-10 flex min-h-0 flex-1 flex-col ${noScroll ? "overflow-hidden" : BOOKMARK_SCROLL} px-2 py-2 sm:px-2.5 sm:py-2.5`}
-      >
-        {children}
+      <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-2.5 sm:py-2.5">
+        <div
+          className={`${bookmarkPageScrollClasses} min-w-0`}
+          data-bookmark-scroll="true"
+        >
+          <div className={bookmarkPageBodyClasses}>{children}</div>
+        </div>
       </div>
     </div>
   );
@@ -123,15 +122,17 @@ function ResultTabPlaceholder({
     default:
       inner = null;
   }
-  return <ResultBookmarkCard noScroll={tab === "statistik"}>{inner}</ResultBookmarkCard>;
+  return <ResultBookmarkCard>{inner}</ResultBookmarkCard>;
 }
 
 function SummaryPlaceholder() {
   return (
     <div
-      className="min-h-[12rem] rounded-md bg-white/[0.03]"
+      className="flex min-h-0 flex-1 flex-col"
       aria-label="Summary"
-    />
+    >
+      <div className="min-h-0 flex-1 rounded-md bg-white/[0.03]" />
+    </div>
   );
 }
 
@@ -154,7 +155,7 @@ function LineupPlaceholder({
   }));
 
   return (
-    <div className="space-y-4 text-xs">
+    <div className="flex min-h-0 min-w-0 flex-col space-y-4 text-xs">
       <div>
         <p className="mb-1.5 font-semibold text-brand-300/90">{homeName}</p>
         <ul className="divide-y divide-white/[0.06] overflow-hidden rounded-md bg-white/[0.02]">
@@ -201,7 +202,7 @@ function KlasemenLongPlaceholder() {
   }));
 
   return (
-    <>
+    <div className="flex min-h-0 min-w-0 flex-col">
       <div className="grid shrink-0 grid-cols-[auto_1fr_auto_auto_auto_auto_auto] gap-x-2 border-b border-white/[0.06] px-2 py-1.5 text-[9px] font-semibold uppercase tracking-wide text-slate-500">
         <span className="w-6 text-center">#</span>
         <span>Team</span>
@@ -245,7 +246,7 @@ function KlasemenLongPlaceholder() {
           </li>
         ))}
       </ul>
-    </>
+    </div>
   );
 }
 
@@ -407,7 +408,7 @@ export function MatchDetailTabNav({
   /** `justify-evenly`: jarak tepi↔tombol = jarak tombol↔tombol (seragam). */
   return (
     <nav
-      className="flex w-full flex-nowrap items-end justify-evenly overflow-x-auto px-2 py-1 [scrollbar-width:none] sm:px-3 [&::-webkit-scrollbar]:hidden"
+      className="flex w-full shrink-0 flex-nowrap items-end justify-evenly overflow-x-auto px-2 py-1 [scrollbar-width:none] sm:px-3 [&::-webkit-scrollbar]:hidden"
       aria-label={
         disabled
           ? "Bookmark (papan kosong)"
@@ -446,7 +447,7 @@ export function MatchDetailTabContent({
   match: MatchRow;
 }) {
   return (
-    <div className="flex h-full min-h-0 w-full min-w-0 flex-col overflow-hidden">
+    <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
       <ResultTabPlaceholder tab={tab} match={match} />
     </div>
   );

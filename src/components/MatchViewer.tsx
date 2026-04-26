@@ -269,8 +269,8 @@ export function MatchViewer() {
   const leagueCaption = activeMatch ? headerLeagueCaption(activeMatch) : null;
 
   return (
-    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-2.5">
-      <header className="mb-3 shrink-0 flex items-start gap-2.5 rounded-2xl border border-white/[0.08] bg-[#0c1220] px-3 py-4 sm:gap-3 sm:px-4 sm:py-[1.125rem]">
+    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-2 pb-1 pt-1.5 sm:px-2.5 sm:pt-2">
+      <header className="mb-2 shrink-0 flex items-start gap-2.5 rounded-2xl border border-white/[0.08] bg-[#0c1220] px-3 py-3 sm:gap-3 sm:px-4 sm:py-3.5">
         {activeMatch ? (
           <LogoImg
             kind="leagues"
@@ -336,11 +336,11 @@ export function MatchViewer() {
         </div>
       ) : (
         <section
-          className="result-panel-field grid min-h-0 flex-1 content-start grid-rows-[auto_auto_auto_auto] overflow-hidden rounded-2xl border border-white/[0.08]"
+          className="result-panel-field flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-white/[0.08]"
           aria-label="Hasil pertandingan"
         >
           {/* 2) Papan skor: logo & nama H/A, skor, caption (Full Time); geser + auto-slide; dot di bawahnya */}
-          <div className="min-w-0 min-h-0 border-b border-white/[0.06] px-0 pb-2 pt-2">
+          <div className="min-h-0 min-w-0 shrink-0 border-b border-white/[0.06] px-0 pb-2 pt-2">
             <div
               className="min-w-0 touch-pan-x"
               onTouchStart={scheduleResumeAuto}
@@ -402,8 +402,8 @@ export function MatchViewer() {
           </div>
 
           {/* 3) Caption pertandingan aktif (kiri) + nama akun (kanan); lalu 4 bookmark */}
-          <div className="min-h-0 px-2 pt-2 sm:px-3">
-            <div className="mb-2 flex items-center justify-between gap-2 px-1">
+          <div className="flex min-h-0 min-w-0 shrink-0 flex-col gap-2 px-2 pt-2 sm:px-3">
+            <div className="flex items-center justify-between gap-2 px-1">
               <p className="min-w-0 flex-1 text-left text-[11px] font-medium leading-snug text-slate-300">
                 {activeMatch ? (
                   <span className="line-clamp-2 break-words">
@@ -428,18 +428,18 @@ export function MatchViewer() {
               disabled={!activeMatch}
             />
           </div>
-          <div className="h-px min-h-0 bg-white/[0.08]" aria-hidden />
+          <div className="h-px min-h-0 shrink-0 bg-white/[0.08]" aria-hidden />
 
-          {/* 4) Card bookmark dibatasi tinggi tetap; sisa area sengaja kosong sebelum tombol bawah */}
+          {/* 4) Kartu bookmark: isi sisa tinggi; scroll hanya di dalam kartu */}
           <div
-            className="flex h-[clamp(17.5rem,44dvh,23rem)] min-h-0 min-w-0 flex-col overflow-hidden px-2 py-2 sm:h-[clamp(18.5rem,46dvh,24.5rem)] sm:px-3"
+            className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-3"
             role="region"
             aria-label="Tab content"
           >
             {activeMatch ? (
               <MatchDetailTabContent tab={detailTab} match={activeMatch} />
             ) : (
-              <p className="py-4 text-center text-sm text-slate-400">
+              <p className="shrink-0 py-4 text-center text-sm text-slate-400">
                 Tambahkan skor di sheet untuk mengaktifkan tombol dan konten di papan
                 ini.
               </p>

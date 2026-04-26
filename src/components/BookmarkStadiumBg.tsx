@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 const BOOKMARK_CANDIDATES = ["/icons/bookmark.jpg", "/icons/bookmark.png"] as const;
 
 /**
- * Lapisan gambar di belakang konten bookmark (opacity ~15%).
+ * Lapisan gambar di belakang konten bookmark (opacity 22%).
  * Jika tidak ada file / gagal muat → tidak render (tetap layout CSS sekarang).
  */
 export function BookmarkStadiumBg() {
@@ -43,7 +43,7 @@ export function BookmarkStadiumBg() {
 
   return (
     <div
-      className="pointer-events-none absolute inset-0 z-0 rounded-lg bg-cover bg-center opacity-[0.15] sm:rounded-xl"
+      className="pointer-events-none absolute inset-0 z-0 rounded-lg bg-cover bg-center opacity-[0.22] sm:rounded-xl"
       style={{ backgroundImage: `url(${url})` }}
       aria-hidden
     />

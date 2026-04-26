@@ -3,7 +3,8 @@ import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Football Sheet Viewer",
-  description: "Jadwal & hasil dari Google Sheet — 4 papan per layar",
+  description:
+    "Jadwal & hasil dari Google Sheet — UI mobile 9:16 (referensi YouTube Short 1080×1920).",
 };
 
 /** Shorts / Reels / TikTok: area aman notch & home indicator */
