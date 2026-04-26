@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { proxiedLogoImageSrc } from "@/lib/logoImageProxy";
+import { isLikelyDirectImageUrl } from "@/lib/logoImageUrl";
 
 const EXT = ["png", "webp", "svg"] as const;
 
@@ -24,7 +25,9 @@ export function LogoImg({
   const [i, setI] = useState(0);
   const [useRemote, setUseRemote] = useState(true);
   const cleanUrl = logoUrl.trim();
-  const hasRemote = useRemote && cleanUrl.length > 0;
+  /** URL remote hanya jika bentuknya jelas link gambar; selain itu langsung `logoKey` lokal. */
+  const hasRemote =
+    useRemote && cleanUrl.length > 0 && isLikelyDirectImageUrl(cleanUrl);
   const src = hasRemote
     ? proxiedLogoImageSrc(cleanUrl)
     : logoKey && i < EXT.length
