@@ -1,9 +1,14 @@
 "use client";
 
+import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import type { GoalScorer, MatchRow } from "@/lib/types";
 import {
   bookmarkPageBodyClasses,
-  bookmarkPageScrollClasses,
+  bookmarkPageScrollBarThumbClasses,
+  bookmarkPageScrollHostBaseClasses,
+  bookmarkPageScrollOverflowAuto,
+  bookmarkPageScrollOverflowHidden,
+  computeBookmarkYScrollNeeded,
 } from "@/lib/bookmarkLayout";
 import { MatchStatisticsBars } from "@/components/MatchStatisticsBars";
 import { getMatchStatistics } from "@/lib/matchStatistics";
@@ -72,16 +77,53 @@ const RESULT_TABS = [
 export type ResultTabId = (typeof RESULT_TABS)[number]["id"];
 
 /**
- * Kartu bookmark: mengisi sisa tinggi panel. Satu-satunya scroll vertikal hasil
- * ada di `.bookmark-page-scroll`; area konten punya min-tinggi = acuan Statistics.
+ * Kartu bookmark: scroll vertikal hanya bila `computeBookmarkYScrollNeeded` true
+ * (ukur `scrollHeight` vs `clientHeight` + hysteresis — perbaikan bug `sh > ch - 2`
+ * yang membuat scrollbar tetap on walau `sh === ch`).
  */
 function ResultBookmarkCard({ children }: { children: React.ReactNode }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [needsYScroll, setNeedsYScroll] = useState(false);
+
+  const updateYScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    setNeedsYScroll((prev) =>
+      computeBookmarkYScrollNeeded(prev, el.scrollHeight, el.clientHeight),
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return undefined;
+
+    const measure = () => {
+      requestAnimationFrame(() => {
+        updateYScroll();
+        requestAnimationFrame(updateYScroll);
+      });
+    };
+
+    measure();
+    const ro = new ResizeObserver(() => measure());
+    ro.observe(el);
+    const inner = el.firstElementChild;
+    if (inner) ro.observe(inner);
+
+    return () => ro.disconnect();
+  }, [children, updateYScroll]);
+
+  const scrollYClasses = needsYScroll
+    ? `${bookmarkPageScrollOverflowAuto} ${bookmarkPageScrollBarThumbClasses}`
+    : bookmarkPageScrollOverflowHidden;
+
   return (
     <div className="bookmark-card-field relative flex min-h-0 w-full flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] sm:rounded-xl">
       <BookmarkStadiumBg />
       <div className="relative z-10 flex min-h-0 flex-1 flex-col overflow-hidden px-2 py-2 sm:px-2.5 sm:py-2.5">
         <div
-          className={`${bookmarkPageScrollClasses} min-w-0`}
+          ref={scrollRef}
+          className={`${bookmarkPageScrollHostBaseClasses} min-w-0 ${scrollYClasses}`}
           data-bookmark-scroll="true"
         >
           <div className={bookmarkPageBodyClasses}>{children}</div>
@@ -128,10 +170,10 @@ function ResultTabPlaceholder({
 function SummaryPlaceholder() {
   return (
     <div
-      className="flex min-h-0 flex-1 flex-col"
+      className="flex min-h-0 min-w-0 flex-1 flex-col"
       aria-label="Summary"
     >
-      <div className="min-h-0 flex-1 rounded-md bg-white/[0.03]" />
+      <div className="min-h-0 min-w-0 flex-1 rounded-md bg-white/[0.03]" />
     </div>
   );
 }
