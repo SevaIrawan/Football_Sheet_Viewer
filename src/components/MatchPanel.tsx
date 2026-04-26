@@ -106,7 +106,13 @@ function ResultTabPlaceholder({
       inner = <LineupPlaceholder homeName={homeName} awayName={awayName} />;
       break;
     case "statistik":
-      inner = <MatchStatisticsBars statistics={getMatchStatistics(match)} />;
+      inner = (
+        <MatchStatisticsBars
+          statistics={getMatchStatistics(match)}
+          homeLeagueRank={match.home_league_rank}
+          awayLeagueRank={match.away_league_rank}
+        />
+      );
       break;
     case "table":
       inner = <KlasemenLongPlaceholder />;

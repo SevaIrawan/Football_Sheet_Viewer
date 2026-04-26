@@ -2,7 +2,10 @@ import Papa from "papaparse";
 import type { GoalScorer, MatchRow, MatchStatistics } from "@/lib/types";
 
 /** Kolom sheet CSV (bukan objek `statistics` — itu dari API/DB). */
-type MatchRowCsvKey = Exclude<keyof MatchRow, "statistics" | "goal_scorers">;
+type MatchRowCsvKey = Exclude<
+  keyof MatchRow,
+  "statistics" | "goal_scorers" | "home_goal_scorers_text" | "away_goal_scorers_text"
+>;
 
 function normalizeHeaderKey(key: string): string {
   return key
@@ -51,6 +54,9 @@ const FIELD_ALIASES: Record<string, MatchRowCsvKey> = {
   jadwal: "kickoff",
   status: "status",
   generate_video: "generate_video",
+  /** Standing: satu nama header sheet kanonik (normalisasi → snake_case). */
+  home_league_rank: "home_league_rank",
+  away_league_rank: "away_league_rank",
 };
 
 function emptyRow(): MatchRow {
@@ -72,24 +78,40 @@ function emptyRow(): MatchRow {
   };
 }
 
+/** Satu kunci snake_case per kolom — sama logika dengan header CSV / baris 1 grid Sheets. */
+function normalizeRecordKeys(row: Record<string, string>): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(row)) {
+    const nk = normalizeHeaderKey(k);
+    if (!nk) continue;
+    out[nk] = v === undefined || v === null ? "" : String(v).trim();
+  }
+  return out;
+}
+
 function recordToMatch(row: Record<string, string>): MatchRow {
+  const r = normalizeRecordKeys(row);
   const out = emptyRow();
-  for (const [rawKey, value] of Object.entries(row)) {
-    const nk = normalizeHeaderKey(rawKey);
+  for (const [nk, value] of Object.entries(r)) {
     const field = FIELD_ALIASES[nk];
     if (field) {
-      out[field] = (value ?? "").trim();
+      out[field] = value;
     }
   }
-  out.statistics = parseStatistics(row);
-  out.goal_scorers = parseGoalScorers(row);
-  const hgs = readFirst(row, ["home_goal_scorers", "home_scorers"]);
-  const ags = readFirst(row, ["away_goal_scorers", "away_scorers"]);
+  out.statistics = parseStatistics(r);
+  out.goal_scorers = parseGoalScorers(r);
+  const hgs = readFirst(r, ["home_goal_scorers", "home_scorers"]);
+  const ags = readFirst(r, ["away_goal_scorers", "away_scorers"]);
   if (hgs) out.home_goal_scorers_text = hgs;
   if (ags) out.away_goal_scorers_text = ags;
   out.generate_video = normalizeGenerateVideoStatus(
-    readFirst(row, ["generate_video"]),
+    readFirst(r, ["generate_video"]),
   );
+  /** Standing — kolom sheet `home_league_rank` / `away_league_rank` (sumber kanonik). */
+  const homeRank = readFirst(r, ["home_league_rank"]);
+  const awayRank = readFirst(r, ["away_league_rank"]);
+  if (homeRank) out.home_league_rank = homeRank;
+  if (awayRank) out.away_league_rank = awayRank;
   return out;
 }
 
@@ -101,7 +123,8 @@ function normalizeGenerateVideoStatus(value: string): string {
 
 function readFirst(row: Record<string, string>, keys: string[]): string {
   for (const k of keys) {
-    const v = row[k];
+    const nk = normalizeHeaderKey(k);
+    const v = row[nk];
     if (typeof v === "string" && v.trim().length > 0) return v.trim();
   }
   return "";

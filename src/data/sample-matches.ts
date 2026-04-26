@@ -25,6 +25,8 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     kickoff: "",
     status: "FT",
     generate_video: "YES",
+    home_league_rank: "3",
+    away_league_rank: "1",
     statistics: SAMPLE_STATS_MOCK_A,
     goal_scorers: [
       { team: "home", player: "Home A #9", minute: "22" },
