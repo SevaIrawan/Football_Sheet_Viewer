@@ -4,6 +4,7 @@ import type { GoalScorer, MatchRow } from "@/lib/types";
 import { MatchStatisticsBars } from "@/components/MatchStatisticsBars";
 import { getMatchStatistics } from "@/lib/matchStatistics";
 import { LogoImg } from "@/components/LogoImg";
+import { BookmarkStadiumBg } from "@/components/BookmarkStadiumBg";
 import { ScorecardFootballIcon } from "@/components/ScorecardFootballIcon";
 
 export function hasScore(m: MatchRow): boolean {
@@ -80,9 +81,10 @@ function ResultBookmarkCard({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bookmark-card-field flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] sm:rounded-xl">
+    <div className="bookmark-card-field relative flex min-h-0 min-w-0 w-full flex-1 flex-col overflow-hidden rounded-lg border border-white/[0.08] sm:rounded-xl">
+      <BookmarkStadiumBg />
       <div
-        className={`flex min-h-0 flex-1 flex-col ${noScroll ? "overflow-hidden" : BOOKMARK_SCROLL} px-2 py-2 sm:px-2.5 sm:py-2.5`}
+        className={`relative z-10 flex min-h-0 flex-1 flex-col ${noScroll ? "overflow-hidden" : BOOKMARK_SCROLL} px-2 py-2 sm:px-2.5 sm:py-2.5`}
       >
         {children}
       </div>
