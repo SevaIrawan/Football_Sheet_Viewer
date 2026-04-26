@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { proxiedLogoImageSrc } from "@/lib/logoImageProxy";
 
 const EXT = ["png", "webp", "svg"] as const;
 
@@ -25,7 +26,7 @@ export function LogoImg({
   const cleanUrl = logoUrl.trim();
   const hasRemote = useRemote && cleanUrl.length > 0;
   const src = hasRemote
-    ? cleanUrl
+    ? proxiedLogoImageSrc(cleanUrl)
     : logoKey && i < EXT.length
       ? `${base}.${EXT[i]}`
       : "";
@@ -64,6 +65,8 @@ export function LogoImg({
       src={src}
       alt=""
       className={`object-contain ${className}`}
+      referrerPolicy="no-referrer"
+      decoding="async"
       onError={onError}
     />
   );
