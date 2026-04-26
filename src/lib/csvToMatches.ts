@@ -19,6 +19,8 @@ const FIELD_ALIASES: Record<string, MatchRowCsvKey> = {
   liga: "league_name",
   league_logo_key: "league_logo_key",
   leaguelogo: "league_logo_key",
+  league_logo_url: "league_logo_url",
+  leagueurl: "league_logo_url",
   season: "season",
   musim: "season",
   matchweek: "matchweek",
@@ -29,8 +31,12 @@ const FIELD_ALIASES: Record<string, MatchRowCsvKey> = {
   tanggal: "match_date",
   home_logo_key: "home_logo_key",
   homelogo: "home_logo_key",
+  home_logo_url: "home_logo_url",
+  homeurl: "home_logo_url",
   away_logo_key: "away_logo_key",
   awaylogo: "away_logo_key",
+  away_logo_url: "away_logo_url",
+  awayurl: "away_logo_url",
   home_name: "home_name",
   homename: "home_name",
   home: "home_name",
@@ -44,15 +50,19 @@ const FIELD_ALIASES: Record<string, MatchRowCsvKey> = {
   kickoff: "kickoff",
   jadwal: "kickoff",
   status: "status",
+  generate_video: "generate_video",
 };
 
 function emptyRow(): MatchRow {
   return {
     league_name: "",
     league_logo_key: "",
+    league_logo_url: "",
     matchweek: "",
     home_logo_key: "",
     away_logo_key: "",
+    home_logo_url: "",
+    away_logo_url: "",
     home_name: "",
     away_name: "",
     home_score: "",
@@ -73,7 +83,16 @@ function recordToMatch(row: Record<string, string>): MatchRow {
   }
   out.statistics = parseStatistics(row);
   out.goal_scorers = parseGoalScorers(row);
+  out.generate_video = normalizeGenerateVideoStatus(
+    readFirst(row, ["generate_video"]),
+  );
   return out;
+}
+
+function normalizeGenerateVideoStatus(value: string): string {
+  const v = value.trim().toUpperCase();
+  if (v === "YES" || v === "PENDING" || v === "DONE") return v;
+  return v;
 }
 
 function readFirst(row: Record<string, string>, keys: string[]): string {
@@ -216,8 +235,10 @@ function parseCombinedScorers(text: string): GoalScorer[] {
 }
 
 function parseGoalScorers(row: Record<string, string>): GoalScorer[] | null {
+  // Format utama yang disepakati: 2 kolom terpisah per sisi.
   const homeText = readFirst(row, ["home_goal_scorers", "home_scorers"]);
   const awayText = readFirst(row, ["away_goal_scorers", "away_scorers"]);
+  // Fallback kompatibilitas lama (opsional).
   const combined = readFirst(row, ["goal_scorers", "scorers"]);
 
   const out: GoalScorer[] = [
@@ -245,6 +266,32 @@ export function parseMatchesCsv(text: string): MatchRow[] {
   for (const raw of parsed.data) {
     if (!raw || typeof raw !== "object") continue;
     const m = recordToMatch(raw);
+    if (!m.home_name && !m.away_name) continue;
+    rows.push(m);
+  }
+  return rows;
+}
+
+/**
+ * Baris pertama = header (sama seperti CSV), baris berikutnya = data.
+ * Dipakai Google Sheets API `values.get` (matriks string).
+ */
+export function parseMatchesGrid(grid: string[][]): MatchRow[] {
+  if (!grid.length) return [];
+  const headerCells = grid[0]!.map((h) => String(h ?? ""));
+  const headers = headerCells.map((h) => normalizeHeaderKey(h));
+  const rows: MatchRow[] = [];
+  for (let i = 1; i < grid.length; i++) {
+    const cells = grid[i] ?? [];
+    const record: Record<string, string> = {};
+    for (let c = 0; c < headers.length; c++) {
+      const key = headers[c]!;
+      if (!key) continue;
+      const raw = cells[c];
+      record[key] =
+        raw === null || raw === undefined ? "" : String(raw).trim();
+    }
+    const m = recordToMatch(record);
     if (!m.home_name && !m.away_name) continue;
     rows.push(m);
   }

@@ -1,50 +1,117 @@
 import { NextResponse } from "next/server";
 import { SAMPLE_MATCHES } from "@/data/sample-matches";
-import { parseMatchesCsv } from "@/lib/csvToMatches";
+import { parseMatchesCsv, parseMatchesGrid } from "@/lib/csvToMatches";
+import {
+  fetchSheetValuesMatrix,
+  isGoogleSheetsApiConfigured,
+} from "@/lib/googleSheets";
+import type { MatchRow } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+function filterGenerateVideoYes(rows: MatchRow[]): MatchRow[] {
+  return rows.filter(
+    (r) => (r.generate_video ?? "").toString().trim().toUpperCase() === "YES",
+  );
+}
+
+type SheetSource = "sheet_api" | "sheet_csv" | "sample";
 
 export async function GET() {
-  const url = process.env.SHEET_CSV_URL?.trim();
+  let lastError: string | undefined;
 
-  if (!url) {
-    return NextResponse.json({
-      rows: SAMPLE_MATCHES,
-      source: "sample" as const,
-    });
+  if (isGoogleSheetsApiConfigured()) {
+    try {
+      const matrix = await fetchSheetValuesMatrix();
+      if (matrix && matrix.values.length > 0) {
+        const parsed = parseMatchesGrid(matrix.values);
+        const rows = filterGenerateVideoYes(parsed);
+        if (rows.length === 0) {
+          return NextResponse.json({
+            rows: [],
+            source: "sheet_api" as const,
+            range: matrix.range,
+            error: "Tidak ada baris dengan generate_video = YES.",
+          });
+        }
+        return NextResponse.json({
+          rows,
+          source: "sheet_api" as const,
+          range: matrix.range,
+        });
+      }
+      lastError = "Sheet API: range kosong atau tidak ada baris.";
+    } catch (e) {
+      lastError = e instanceof Error ? e.message : "Sheet API error";
+    }
   }
 
-  try {
-    const res = await fetch(url, {
-      next: { revalidate: 0 },
-      headers: { Accept: "text/csv,*/*" },
-    });
-    if (!res.ok) {
-      return NextResponse.json(
-        {
-          rows: SAMPLE_MATCHES,
-          source: "sample" as const,
-          error: `Gagal fetch sheet: HTTP ${res.status}`,
-        },
-        { status: 200 },
-      );
-    }
-    const text = await res.text();
-    const rows = parseMatchesCsv(text);
-    if (rows.length === 0) {
+  const url = process.env.SHEET_CSV_URL?.trim();
+  if (url) {
+    try {
+      const res = await fetch(url, {
+        next: { revalidate: 0 },
+        headers: { Accept: "text/csv,*/*" },
+      });
+      if (!res.ok) {
+        return NextResponse.json(
+          {
+            rows: filterGenerateVideoYes(SAMPLE_MATCHES),
+            source: "sample" as const,
+            error: buildFallbackError(
+              lastError,
+              `Gagal fetch sheet CSV: HTTP ${res.status}`,
+            ),
+          },
+          { status: 200 },
+        );
+      }
+      const text = await res.text();
+      const rows = filterGenerateVideoYes(parseMatchesCsv(text));
+      if (rows.length === 0) {
+        return NextResponse.json({
+          rows: [],
+          source: "sheet_csv" as const,
+          error: buildFallbackError(
+            lastError,
+            "Tidak ada baris dengan generate_video = YES.",
+          ),
+        });
+      }
       return NextResponse.json({
-        rows: SAMPLE_MATCHES,
+        rows,
+        source: "sheet_csv" as const,
+        ...(lastError && { warning: `API tidak dipakai: ${lastError}` }),
+      });
+    } catch (e) {
+      const message = e instanceof Error ? e.message : "Unknown error";
+      return NextResponse.json({
+        rows: filterGenerateVideoYes(SAMPLE_MATCHES),
         source: "sample" as const,
-        error: "CSV tidak berisi baris pertandingan yang valid.",
+        error: buildFallbackError(lastError, message),
       });
     }
-    return NextResponse.json({ rows, source: "sheet" as const });
-  } catch (e) {
-    const message = e instanceof Error ? e.message : "Unknown error";
-    return NextResponse.json({
-      rows: SAMPLE_MATCHES,
-      source: "sample" as const,
-      error: message,
-    });
   }
+
+  return jsonSample(lastError);
+}
+
+function buildFallbackError(apiErr: string | undefined, primary: string): string {
+  if (apiErr) return `${primary} (API: ${apiErr})`;
+  return primary;
+}
+
+function jsonSample(apiErr?: string) {
+  const payload: {
+    rows: MatchRow[];
+    source: SheetSource;
+    error?: string;
+    warning?: string;
+  } = {
+    rows: filterGenerateVideoYes(SAMPLE_MATCHES),
+    source: "sample",
+  };
+  if (apiErr) payload.warning = `Sheet API gagal: ${apiErr}`;
+  return NextResponse.json(payload);
 }

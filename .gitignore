@@ -26,6 +26,10 @@ tsconfig.tsbuildinfo
 # env
 .env
 .env.local
+
+# Google Cloud service account keys (jangan di-commit)
+*-service-account*.json
+*-credentials*.json
 .env.development.local
 .env.test.local
 .env.production.local
