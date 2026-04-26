@@ -54,6 +54,14 @@ function formatMatchDateLong(input?: string): string {
   }).format(d);
 }
 
+/**
+ * Nilai kolom `season` dari sheet: format musim liga `yyyy/yy` (mis. 2025/26) → pakai prefiks "Season :".
+ * Teks bebas (Group Stage, Knockout, dll.) → tampil apa adanya tanpa "Season :".
+ */
+function isSeasonYearSlashYearFormat(season: string): boolean {
+  return /^\d{4}\/\d{2}$/.test(season.trim());
+}
+
 /** Angka pekan untuk label "GW : …" (angka, Pekan N, GW N, dll.). */
 function matchweekToGwNumber(matchweek: string): string | null {
   const raw = matchweek.trim();
@@ -67,7 +75,7 @@ function matchweekToGwNumber(matchweek: string): string | null {
   return any?.[1] ?? null;
 }
 
-/** Baris 1: "Season : … | GW : …", baris 2: "Date : …". */
+/** Baris 1: musim/fase + "GW : …"; baris 2: "Date : …". */
 function headerLeagueCaption(m: MatchRow): {
   line1: string | null;
   line2: string | null;
@@ -76,7 +84,13 @@ function headerLeagueCaption(m: MatchRow): {
   const season = (m.season ?? "").trim();
   const gwNum = matchweekToGwNumber(m.matchweek);
   const parts: string[] = [];
-  if (season) parts.push(`Season : ${season}`);
+  if (season) {
+    parts.push(
+      isSeasonYearSlashYearFormat(season)
+        ? `Season : ${season}`
+        : season,
+    );
+  }
   if (gwNum) parts.push(`GW : ${gwNum}`);
   const line1 = parts.length > 0 ? parts.join(" | ") : null;
 

@@ -15,6 +15,9 @@
 /.next/
 /out/
 
+# Puppeteer capture (scripts/puppeteer-short.mjs)
+/screenshots/
+
 # misc
 .DS_Store
 *.pem

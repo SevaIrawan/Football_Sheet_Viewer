@@ -42,15 +42,17 @@ body {
 }
 
 /**
- * Bingkai konten YouTube Short — rasio 9:16 vertikal.
- * Referensi export: 1080×1920 px. Di browser, tinggi/lebar mengikuti viewport (mobile-first).
+ * Bingkai konten YouTube Short — rasio 9:16 tetap (vertikal).
+ * Referensi desain / export: 1080×1920 px. Tinggi memimpin; lebar mengikuti aspect-ratio,
+ * dibatasi max lebar/tinggi agar di desktop tidak melebihi frame Short.
  */
 .yt-shorts-frame {
   box-sizing: border-box;
   aspect-ratio: 9 / 16;
-  height: min(100dvh, calc(100vw * 16 / 9));
+  max-width: min(100vw, 1080px);
+  max-height: min(100dvh, 1920px);
+  height: min(100dvh, 1920px, calc(100vw * 16 / 9));
   width: auto;
-  max-width: 100vw;
   flex-shrink: 0;
 }
 
