@@ -30,14 +30,38 @@ function loadServiceAccountCredentials(): Record<string, unknown> | null {
   return null;
 }
 
-/** True jika ID sheet + kredensial service account tersedia. */
-export function isGoogleSheetsApiConfigured(): boolean {
-  const id = process.env.GOOGLE_SHEETS_SPREADSHEET_ID?.trim();
-  return Boolean(id && loadServiceAccountCredentials());
+/**
+ * ID spreadsheet untuk API: env eksplisit, atau dari `SHEET_CSV_URL` bentuk
+ * `.../spreadsheets/d/<ID>/...` (bukan link publish `.../d/e/2PACX-...`).
+ */
+export function resolveSpreadsheetId(): string | null {
+  const direct = process.env.GOOGLE_SHEETS_SPREADSHEET_ID?.trim();
+  if (direct) return direct;
+  const csv = process.env.SHEET_CSV_URL?.trim();
+  if (!csv) return null;
+  if (csv.includes("/spreadsheets/d/e/")) return null;
+  const m = csv.match(/\/spreadsheets\/d\/([a-zA-Z0-9_-]+)(?:\/|\?|$)/);
+  const id = m?.[1];
+  if (!id || id === "e") return null;
+  return id;
 }
 
-function getSpreadsheetId(): string | null {
-  return process.env.GOOGLE_SHEETS_SPREADSHEET_ID?.trim() || null;
+/** True jika ID sheet + kredensial service account tersedia. */
+export function isGoogleSheetsApiConfigured(): boolean {
+  return Boolean(resolveSpreadsheetId() && loadServiceAccountCredentials());
+}
+
+/** Pesan singkat jika kredensial/ID tidak lengkap (untuk respons API / debugging). */
+export function getGoogleSheetsConfigHint(): string | null {
+  const creds = loadServiceAccountCredentials();
+  const id = resolveSpreadsheetId();
+  if (creds && !id) {
+    return "Isi GOOGLE_SHEETS_SPREADSHEET_ID dari URL edit sheet (.../spreadsheets/d/<id>/edit). Link publish bertipe .../d/e/2PACX-... tidak berisi ID untuk Sheets API.";
+  }
+  if (id && !creds) {
+    return "Isi GOOGLE_SERVICE_ACCOUNT_KEY_FILE (path ke .json) atau GOOGLE_SERVICE_ACCOUNT_JSON.";
+  }
+  return null;
 }
 
 function getReadRange(): string {
@@ -64,7 +88,7 @@ export async function fetchSheetValuesMatrix(): Promise<{
   range: string;
   values: string[][];
 } | null> {
-  const spreadsheetId = getSpreadsheetId();
+  const spreadsheetId = resolveSpreadsheetId();
   const creds = loadServiceAccountCredentials();
   if (!spreadsheetId || !creds) return null;
 
@@ -101,7 +125,7 @@ export async function updateSheetRange(
   range: string,
   values: (string | number | null | undefined)[][],
 ): Promise<void> {
-  const spreadsheetId = getSpreadsheetId();
+  const spreadsheetId = resolveSpreadsheetId();
   const creds = loadServiceAccountCredentials();
   if (!spreadsheetId || !creds) {
     throw new Error("Google Sheets API belum dikonfigurasi (ID + kredensial).");

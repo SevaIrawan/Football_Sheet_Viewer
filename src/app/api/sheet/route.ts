@@ -3,6 +3,7 @@ import { SAMPLE_MATCHES } from "@/data/sample-matches";
 import { parseMatchesCsv, parseMatchesGrid } from "@/lib/csvToMatches";
 import {
   fetchSheetValuesMatrix,
+  getGoogleSheetsConfigHint,
   isGoogleSheetsApiConfigured,
 } from "@/lib/googleSheets";
 import type { MatchRow } from "@/lib/types";
@@ -79,10 +80,12 @@ export async function GET() {
           ),
         });
       }
+      const hint = getGoogleSheetsConfigHint();
       return NextResponse.json({
         rows,
         source: "sheet_csv" as const,
         ...(lastError && { warning: `API tidak dipakai: ${lastError}` }),
+        ...(hint && { configHint: hint }),
       });
     } catch (e) {
       const message = e instanceof Error ? e.message : "Unknown error";
@@ -103,15 +106,18 @@ function buildFallbackError(apiErr: string | undefined, primary: string): string
 }
 
 function jsonSample(apiErr?: string) {
+  const hint = getGoogleSheetsConfigHint();
   const payload: {
     rows: MatchRow[];
     source: SheetSource;
     error?: string;
     warning?: string;
+    configHint?: string;
   } = {
     rows: filterGenerateVideoYes(SAMPLE_MATCHES),
     source: "sample",
   };
   if (apiErr) payload.warning = `Sheet API gagal: ${apiErr}`;
+  if (hint) payload.configHint = hint;
   return NextResponse.json(payload);
 }
