@@ -11,6 +11,26 @@ export function hasScore(m: MatchRow): boolean {
   );
 }
 
+/** Satu string per sisi: "Kane 15', Sane 78'" — untuk kartu skor (wrap max 3 baris di UI). */
+function formatSideScorersCompact(
+  scorers: GoalScorer[] | null | undefined,
+  side: "home" | "away",
+): string {
+  if (!scorers?.length) return "";
+  const parts = scorers
+    .filter((s) => s.team === side)
+    .map((s) => {
+      const p = s.player.trim();
+      const raw = (s.minute ?? "").trim();
+      if (!p) return "";
+      if (!raw) return p;
+      const m = /[''′]$/.test(raw) ? raw : `${raw}'`;
+      return `${p} ${m}`;
+    })
+    .filter(Boolean);
+  return parts.join(", ");
+}
+
 function statusSubtitle(m: MatchRow, scored: boolean): string {
   const s = m.status.trim().toUpperCase();
   if (s === "LIVE") return "Live";
@@ -76,12 +96,7 @@ function ResultTabPlaceholder({
       inner = <LineupPlaceholder homeName={homeName} awayName={awayName} />;
       break;
     case "statistik":
-      inner = (
-        <div className="space-y-2">
-          <MatchStatisticsBars statistics={getMatchStatistics(match)} />
-          <GoalScorers scorers={match.goal_scorers} />
-        </div>
-      );
+      inner = <MatchStatisticsBars statistics={getMatchStatistics(match)} />;
       break;
     case "table":
       inner = <KlasemenLongPlaceholder />;
@@ -90,87 +105,6 @@ function ResultTabPlaceholder({
       inner = null;
   }
   return <ResultBookmarkCard noScroll={tab === "statistik"}>{inner}</ResultBookmarkCard>;
-}
-
-type GoalScorerRow = {
-  id: string;
-  homeName?: string;
-  minute?: string;
-  awayName?: string;
-};
-
-function GoalScorers({
-  scorers,
-  rows,
-}: {
-  scorers?: GoalScorer[] | null;
-  /** Nanti isi dari database; sementara tampil 5 baris kosong bila tidak ada data. */
-  rows?: GoalScorerRow[];
-}) {
-  const fromScorers = buildGoalRows(scorers);
-  const safeRows: GoalScorerRow[] = rows && rows.length > 0 ? rows : fromScorers;
-
-  return (
-    <section
-      className="rounded-md border border-white/[0.04] bg-white/[0.015]"
-      aria-label="Goal scorers"
-    >
-      <div className="flex items-center justify-between gap-2 border-b border-white/[0.04] px-2 py-1">
-        <p className="text-[11px] font-semibold tracking-wide text-slate-300">
-          Goal scorers
-        </p>
-      </div>
-
-      <ul className="divide-y divide-white/[0.035]" role="list">
-        {safeRows.map((r) => (
-          <li
-            key={r.id}
-            className="grid grid-cols-[1fr_auto_1fr] items-center gap-x-2 px-2 py-1.5"
-          >
-            <span className="min-w-0 truncate text-left text-[11px] font-medium text-slate-300">
-              {r.homeName ?? ""}
-            </span>
-            <span className="rounded-full border border-white/[0.06] bg-black/10 px-2 py-0.5 text-[10px] font-semibold tabular-nums text-slate-400">
-              {r.minute ?? ""}
-            </span>
-            <span className="min-w-0 truncate text-right text-[11px] font-medium text-slate-300">
-              {r.awayName ?? ""}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function buildGoalRows(scorers?: GoalScorer[] | null): GoalScorerRow[] {
-  if (!scorers || scorers.length === 0) {
-    return Array.from({ length: 5 }, (_, i) => ({
-      id: `empty-${i}`,
-      homeName: "",
-      minute: "",
-      awayName: "",
-    }));
-  }
-
-  const home = scorers.filter((s) => s.team === "home");
-  const away = scorers.filter((s) => s.team === "away");
-  const maxRows = Math.max(home.length, away.length, 5);
-
-  return Array.from({ length: maxRows }, (_, i) => {
-    const h = home[i];
-    const a = away[i];
-    const minute =
-      h?.minute && a?.minute && h.minute !== a.minute
-        ? `${h.minute}/${a.minute}`
-        : h?.minute ?? a?.minute ?? "";
-    return {
-      id: `goal-${i}`,
-      homeName: h?.player ?? "",
-      awayName: a?.player ?? "",
-      minute,
-    };
-  });
 }
 
 function SummaryPlaceholder() {
@@ -347,12 +281,14 @@ export function MatchScoreEmptySlide({ panelNumber }: { panelNumber: number }) {
 /** Hanya papan skor — satu slide per pertandingan (carousel). */
 export function MatchScoreSlide({ m }: { m: MatchRow }) {
   const subtitle = statusSubtitle(m, true);
+  const homeGoals = formatSideScorersCompact(m.goal_scorers, "home");
+  const awayGoals = formatSideScorersCompact(m.goal_scorers, "away");
 
   return (
     <article className="score-card-field w-full min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] shadow-lg shadow-black/30">
       <div className="px-3 pb-5 pt-5 sm:px-4 sm:pb-6 sm:pt-6">
         <div className="grid grid-cols-[1fr_auto_1fr] items-start gap-1.5 sm:gap-3">
-          <div className="flex min-w-0 flex-col items-center gap-2 text-center sm:gap-2.5">
+          <div className="flex min-w-0 flex-col items-center gap-1 text-center sm:gap-1.5">
             <LogoImg
               kind="teams"
               logoKey={m.home_logo_key}
@@ -363,6 +299,14 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
               {m.home_name}
             </p>
+            {homeGoals ? (
+              <p
+                className="line-clamp-3 w-full max-w-[11rem] break-words px-0.5 text-right text-[9px] font-medium leading-snug text-slate-400 sm:max-w-[13rem] sm:text-[10px]"
+                title={homeGoals}
+              >
+                {homeGoals}
+              </p>
+            ) : null}
           </div>
 
           <div className="flex min-w-[4.75rem] flex-col items-center justify-center gap-0.5 px-0.5 pt-0.5 sm:min-w-[5.25rem] sm:gap-1 sm:px-1 sm:pt-1">
@@ -376,7 +320,7 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             </p>
           </div>
 
-          <div className="flex min-w-0 flex-col items-center gap-2 text-center sm:gap-2.5">
+          <div className="flex min-w-0 flex-col items-center gap-1 text-center sm:gap-1.5">
             <LogoImg
               kind="teams"
               logoKey={m.away_logo_key}
@@ -387,6 +331,14 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
               {m.away_name}
             </p>
+            {awayGoals ? (
+              <p
+                className="line-clamp-3 w-full max-w-[11rem] break-words px-0.5 text-left text-[9px] font-medium leading-snug text-slate-400 sm:max-w-[13rem] sm:text-[10px]"
+                title={awayGoals}
+              >
+                {awayGoals}
+              </p>
+            ) : null}
           </div>
         </div>
       </div>
