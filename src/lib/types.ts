@@ -8,10 +8,21 @@ export type MatchStatistics = {
   redCards: { home: number; away: number };
 };
 
+/** Pencetak gol per sisi, siap ditulis dari sheet/API. */
+export type GoalScorer = {
+  team: "home" | "away";
+  player: string;
+  minute?: string;
+};
+
 export type MatchRow = {
   league_name: string;
   league_logo_key: string;
+  /** Contoh: 2025/26 */
+  season?: string;
   matchweek: string;
+  /** Contoh: 2026-04-26 (opsional dari sheet). */
+  match_date?: string;
   home_logo_key: string;
   away_logo_key: string;
   home_name: string;
@@ -22,4 +33,6 @@ export type MatchRow = {
   status: string;
   /** Opsional — dari database / API; tanpa ini bar tampil 0. */
   statistics?: MatchStatistics | null;
+  /** Opsional — daftar pencetak gol untuk tab Statistics. */
+  goal_scorers?: GoalScorer[] | null;
 };

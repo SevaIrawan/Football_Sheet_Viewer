@@ -36,8 +36,39 @@ type ApiResponse = {
   error?: string;
 };
 
-function headerLeagueSubtitle(m: MatchRow): string {
-  return m.matchweek.trim() || m.kickoff.trim() || "\u2014";
+function normalizeDateText(input?: string): string {
+  const raw = (input ?? "").trim();
+  if (!raw) return "";
+  const d = new Date(raw);
+  if (Number.isNaN(d.getTime())) return raw;
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "Asia/Jakarta",
+  }).format(d);
+}
+
+function normalizeMatchweekText(input?: string): string {
+  const raw = (input ?? "").trim();
+  if (!raw) return "";
+  const m = raw.match(/^pekan\s*(\d+)$/i);
+  if (m?.[1]) return `GW ${m[1]}`;
+  return raw;
+}
+
+function headerLeagueSubtitleParts(m: MatchRow): string[] {
+  const parts: string[] = [];
+  const season = (m.season ?? "").trim();
+  const matchweek = normalizeMatchweekText(m.matchweek);
+  const dateText = normalizeDateText(m.match_date);
+
+  if (season) parts.push(season);
+  if (matchweek) parts.push(matchweek);
+  if (dateText) parts.push(dateText);
+  if (parts.length === 0 && m.kickoff.trim()) parts.push(m.kickoff.trim());
+
+  return parts.length > 0 ? parts : ["\u2014"];
 }
 
 function getSlideStepPx(el: HTMLDivElement): number {
@@ -243,15 +274,28 @@ export function MatchViewer() {
               ? activeMatch.league_name.trim() || "Liga"
               : "Football Sheet Viewer"}
           </h1>
-          <p className="truncate text-xs text-slate-400">
-            {activeMatch
-              ? headerLeagueSubtitle(activeMatch)
-              : source === "sample"
+          {activeMatch ? (
+            <div className="mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden">
+              {headerLeagueSubtitleParts(activeMatch).map((part, idx) => (
+                <div key={`${part}-${idx}`} className="flex min-w-0 items-center gap-1.5">
+                  {idx > 0 ? (
+                    <span className="h-1 w-1 shrink-0 rounded-full bg-brand-400/70" aria-hidden />
+                  ) : null}
+                  <span className="truncate rounded-full border border-white/[0.08] bg-white/[0.03] px-1.5 py-0.5 text-[10px] font-medium text-slate-300 sm:text-[11px]">
+                    {part}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="truncate text-xs text-slate-400">
+              {source === "sample"
                 ? `Papan ${activeIndex + 1} kosong — data demo`
                 : source === "sheet"
                   ? `Papan ${activeIndex + 1} kosong — isi dari Sheet`
                   : `Papan ${activeIndex + 1}`}
-          </p>
+            </p>
+          )}
         </div>
         <AccountAvatar />
       </header>

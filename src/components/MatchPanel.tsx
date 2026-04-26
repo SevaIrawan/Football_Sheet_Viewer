@@ -1,6 +1,6 @@
 "use client";
 
-import type { MatchRow } from "@/lib/types";
+import type { GoalScorer, MatchRow } from "@/lib/types";
 import { MatchStatisticsBars } from "@/components/MatchStatisticsBars";
 import { getMatchStatistics } from "@/lib/matchStatistics";
 import { LogoImg } from "@/components/LogoImg";
@@ -79,7 +79,7 @@ function ResultTabPlaceholder({
       inner = (
         <div className="space-y-2">
           <MatchStatisticsBars statistics={getMatchStatistics(match)} />
-          <GoalScorers />
+          <GoalScorers scorers={match.goal_scorers} />
         </div>
       );
       break;
@@ -100,20 +100,15 @@ type GoalScorerRow = {
 };
 
 function GoalScorers({
+  scorers,
   rows,
 }: {
+  scorers?: GoalScorer[] | null;
   /** Nanti isi dari database; sementara tampil 5 baris kosong bila tidak ada data. */
   rows?: GoalScorerRow[];
 }) {
-  const safeRows: GoalScorerRow[] =
-    rows && rows.length > 0
-      ? rows
-      : Array.from({ length: 5 }, (_, i) => ({
-          id: `empty-${i}`,
-          homeName: "",
-          minute: "",
-          awayName: "",
-        }));
+  const fromScorers = buildGoalRows(scorers);
+  const safeRows: GoalScorerRow[] = rows && rows.length > 0 ? rows : fromScorers;
 
   return (
     <section
@@ -146,6 +141,36 @@ function GoalScorers({
       </ul>
     </section>
   );
+}
+
+function buildGoalRows(scorers?: GoalScorer[] | null): GoalScorerRow[] {
+  if (!scorers || scorers.length === 0) {
+    return Array.from({ length: 5 }, (_, i) => ({
+      id: `empty-${i}`,
+      homeName: "",
+      minute: "",
+      awayName: "",
+    }));
+  }
+
+  const home = scorers.filter((s) => s.team === "home");
+  const away = scorers.filter((s) => s.team === "away");
+  const maxRows = Math.max(home.length, away.length, 5);
+
+  return Array.from({ length: maxRows }, (_, i) => {
+    const h = home[i];
+    const a = away[i];
+    const minute =
+      h?.minute && a?.minute && h.minute !== a.minute
+        ? `${h.minute}/${a.minute}`
+        : h?.minute ?? a?.minute ?? "";
+    return {
+      id: `goal-${i}`,
+      homeName: h?.player ?? "",
+      awayName: a?.player ?? "",
+      minute,
+    };
+  });
 }
 
 function SummaryPlaceholder() {

@@ -2,32 +2,10 @@
 
 import { CalendarDays, Trophy } from "lucide-react";
 import { useState } from "react";
-import { MatchViewer } from "@/components/MatchViewer";
+import { ResultViewer } from "@/components/ResultViewer";
+import { ScheduleViewer } from "@/components/ScheduleViewer";
 
 type MainPage = "schedule" | "result";
-
-function SchedulePlaceholder() {
-  return (
-    <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-2.5">
-      <header className="mb-3 shrink-0 flex items-center gap-3 rounded-2xl border border-white/[0.08] bg-[#0c1220] px-3 py-3.5 sm:px-4">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white/[0.06] sm:h-14 sm:w-14">
-          <CalendarDays className="h-6 w-6 text-brand-400/90 sm:h-7 sm:w-7" strokeWidth={1.75} />
-        </div>
-        <div className="min-w-0 flex-1">
-          <h1 className="text-base font-bold text-white sm:text-lg">Schedule</h1>
-          <p className="truncate text-xs text-slate-500">Jadwal pertandingan</p>
-        </div>
-      </header>
-
-      <article className="flex min-h-0 flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border border-white/[0.08] bg-[#12151c] px-4 py-10 text-center shadow-lg shadow-black/20 sm:px-6">
-        <p className="text-base font-semibold text-white">Coming soon</p>
-        <p className="mx-auto mt-3 max-w-[min(100%,260px)] text-sm leading-relaxed text-slate-500">
-          Halaman jadwal sedang disiapkan. Konten dari sheet akan tampil di sini.
-        </p>
-      </article>
-    </div>
-  );
-}
 
 export function MainShell() {
   const [page, setPage] = useState<MainPage>("result");
@@ -43,7 +21,7 @@ export function MainShell() {
           id="main-content"
           className="flex min-h-0 flex-1 flex-col overflow-hidden"
         >
-          {page === "schedule" ? <SchedulePlaceholder /> : <MatchViewer />}
+          {page === "schedule" ? <ScheduleViewer /> : <ResultViewer />}
         </main>
 
         <nav

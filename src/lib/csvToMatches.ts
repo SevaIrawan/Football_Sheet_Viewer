@@ -1,8 +1,8 @@
 import Papa from "papaparse";
-import type { MatchRow } from "@/lib/types";
+import type { GoalScorer, MatchRow, MatchStatistics } from "@/lib/types";
 
 /** Kolom sheet CSV (bukan objek `statistics` — itu dari API/DB). */
-type MatchRowCsvKey = Exclude<keyof MatchRow, "statistics">;
+type MatchRowCsvKey = Exclude<keyof MatchRow, "statistics" | "goal_scorers">;
 
 function normalizeHeaderKey(key: string): string {
   return key
@@ -19,9 +19,14 @@ const FIELD_ALIASES: Record<string, MatchRowCsvKey> = {
   liga: "league_name",
   league_logo_key: "league_logo_key",
   leaguelogo: "league_logo_key",
+  season: "season",
+  musim: "season",
   matchweek: "matchweek",
   pekan: "matchweek",
   gw: "matchweek",
+  match_date: "match_date",
+  date: "match_date",
+  tanggal: "match_date",
   home_logo_key: "home_logo_key",
   homelogo: "home_logo_key",
   away_logo_key: "away_logo_key",
@@ -66,7 +71,162 @@ function recordToMatch(row: Record<string, string>): MatchRow {
       out[field] = (value ?? "").trim();
     }
   }
+  out.statistics = parseStatistics(row);
+  out.goal_scorers = parseGoalScorers(row);
   return out;
+}
+
+function readFirst(row: Record<string, string>, keys: string[]): string {
+  for (const k of keys) {
+    const v = row[k];
+    if (typeof v === "string" && v.trim().length > 0) return v.trim();
+  }
+  return "";
+}
+
+function parseIntSafe(value: string): number | null {
+  if (!value) return null;
+  const cleaned = value.replace(/[^\d-]/g, "");
+  if (!cleaned) return null;
+  const n = Number.parseInt(cleaned, 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+function parsePairText(value: string): { home: number; away: number } | null {
+  if (!value) return null;
+  const m = value.match(/(-?\d+)\s*[-:\/]\s*(-?\d+)/);
+  if (!m) return null;
+  const home = Number.parseInt(m[1] ?? "", 10);
+  const away = Number.parseInt(m[2] ?? "", 10);
+  if (!Number.isFinite(home) || !Number.isFinite(away)) return null;
+  return { home, away };
+}
+
+function readStatPair(
+  row: Record<string, string>,
+  homeKeys: string[],
+  awayKeys: string[],
+  pairKeys: string[],
+): { home: number; away: number } | null {
+  const homeRaw = readFirst(row, homeKeys);
+  const awayRaw = readFirst(row, awayKeys);
+  const home = parseIntSafe(homeRaw);
+  const away = parseIntSafe(awayRaw);
+  if (home != null && away != null) return { home, away };
+
+  const pairRaw = readFirst(row, pairKeys);
+  return parsePairText(pairRaw);
+}
+
+function parseStatistics(row: Record<string, string>): MatchStatistics | null {
+  const shots = readStatPair(
+    row,
+    ["shots_on_target_home", "shot_on_target_home", "sot_home"],
+    ["shots_on_target_away", "shot_on_target_away", "sot_away"],
+    ["shots_on_target", "shot_on_target", "sot"],
+  );
+  const possession = readStatPair(
+    row,
+    ["possession_pct_home", "possession_home"],
+    ["possession_pct_away", "possession_away"],
+    ["possession_pct", "possession"],
+  );
+  const corners = readStatPair(
+    row,
+    ["corner_kicks_home", "corners_home", "corner_home"],
+    ["corner_kicks_away", "corners_away", "corner_away"],
+    ["corner_kicks", "corners", "corner"],
+  );
+  const fouls = readStatPair(
+    row,
+    ["fouls_home", "foul_home"],
+    ["fouls_away", "foul_away"],
+    ["fouls", "foul"],
+  );
+  const yellow = readStatPair(
+    row,
+    ["yellow_cards_home", "yellow_home"],
+    ["yellow_cards_away", "yellow_away"],
+    ["yellow_cards", "yellow"],
+  );
+  const red = readStatPair(
+    row,
+    ["red_cards_home", "red_home"],
+    ["red_cards_away", "red_away"],
+    ["red_cards", "red"],
+  );
+
+  const hasAny = shots || possession || corners || fouls || yellow || red;
+  if (!hasAny) return null;
+
+  return {
+    shotsOnTarget: shots ?? { home: 0, away: 0 },
+    possessionPct: possession ?? { home: 0, away: 0 },
+    cornerKicks: corners ?? { home: 0, away: 0 },
+    fouls: fouls ?? { home: 0, away: 0 },
+    yellowCards: yellow ?? { home: 0, away: 0 },
+    redCards: red ?? { home: 0, away: 0 },
+  };
+}
+
+function parseSideScorers(text: string, team: "home" | "away"): GoalScorer[] {
+  if (!text) return [];
+  return text
+    .split(/[|;\n]+/g)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((token) => {
+      const minuteMatch = token.match(/(\d{1,3}(?:\+\d{1,2})?)\s*'?/);
+      const minute = minuteMatch?.[1]?.trim();
+      const player = token
+        .replace(/(\d{1,3}(?:\+\d{1,2})?)\s*'?/g, "")
+        .replace(/^[-:,\s]+|[-:,\s]+$/g, "")
+        .trim();
+      return {
+        team,
+        player,
+        minute,
+      };
+    })
+    .filter((x) => x.player.length > 0);
+}
+
+function parseCombinedScorers(text: string): GoalScorer[] {
+  if (!text) return [];
+  return text
+    .split(/[|;\n]+/g)
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .map((token) => {
+      const normalized = token.trim();
+      const sideMatch = normalized.match(/^(home|h|away|a)\s*[:\-]\s*/i);
+      const teamRaw = sideMatch?.[1]?.toLowerCase();
+      const team: "home" | "away" =
+        teamRaw === "away" || teamRaw === "a" ? "away" : "home";
+      const body = normalized.replace(/^(home|h|away|a)\s*[:\-]\s*/i, "").trim();
+      const minuteMatch = body.match(/(\d{1,3}(?:\+\d{1,2})?)\s*'?/);
+      const minute = minuteMatch?.[1]?.trim();
+      const player = body
+        .replace(/(\d{1,3}(?:\+\d{1,2})?)\s*'?/g, "")
+        .replace(/^[-:,\s]+|[-:,\s]+$/g, "")
+        .trim();
+      return { team, player, minute };
+    })
+    .filter((x) => x.player.length > 0);
+}
+
+function parseGoalScorers(row: Record<string, string>): GoalScorer[] | null {
+  const homeText = readFirst(row, ["home_goal_scorers", "home_scorers"]);
+  const awayText = readFirst(row, ["away_goal_scorers", "away_scorers"]);
+  const combined = readFirst(row, ["goal_scorers", "scorers"]);
+
+  const out: GoalScorer[] = [
+    ...parseSideScorers(homeText, "home"),
+    ...parseSideScorers(awayText, "away"),
+    ...parseCombinedScorers(combined),
+  ];
+
+  return out.length > 0 ? out : null;
 }
 
 export function parseMatchesCsv(text: string): MatchRow[] {
