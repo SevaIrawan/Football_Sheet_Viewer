@@ -15,9 +15,12 @@ export type GoalScorer = {
   minute?: string;
 };
 
+export type GenerateVideoStatus = "PENDING" | "YES" | "DONE";
+
 export type MatchRow = {
   league_name: string;
   league_logo_key: string;
+  league_logo_url?: string;
   /** Contoh: 2025/26 */
   season?: string;
   matchweek: string;
@@ -25,12 +28,16 @@ export type MatchRow = {
   match_date?: string;
   home_logo_key: string;
   away_logo_key: string;
+  home_logo_url?: string;
+  away_logo_url?: string;
   home_name: string;
   away_name: string;
   home_score: string;
   away_score: string;
   kickoff: string;
   status: string;
+  /** Kontrol pipeline render video short. */
+  generate_video?: GenerateVideoStatus | string;
   /** Opsional — dari database / API; tanpa ini bar tampil 0. */
   statistics?: MatchStatistics | null;
   /** Opsional — daftar pencetak gol untuk tab Statistics. */

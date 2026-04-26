@@ -24,6 +24,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "1",
     kickoff: "",
     status: "FT",
+    generate_video: "YES",
     statistics: SAMPLE_STATS_MOCK_A,
     goal_scorers: [
       { team: "home", player: "Home A #9", minute: "22" },
@@ -45,6 +46,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "2",
     kickoff: "",
     status: "FT",
+    generate_video: "YES",
     statistics: SAMPLE_STATS_MOCK_B,
     goal_scorers: [
       { team: "away", player: "Away B #9", minute: "14" },
@@ -65,6 +67,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "0",
     kickoff: "",
     status: "FT",
+    generate_video: "YES",
     statistics: SAMPLE_STATS_MOCK_C,
   },
   {
@@ -81,6 +84,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "2",
     kickoff: "",
     status: "FT",
+    generate_video: "YES",
     statistics: SAMPLE_STATS_HOME_D,
     goal_scorers: [
       { team: "home", player: "Home D #10", minute: "18" },
@@ -104,6 +108,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "4",
     kickoff: "",
     status: "FT",
+    generate_video: "YES",
     statistics: SAMPLE_STATS_MOCK_E,
     goal_scorers: [
       { team: "home", player: "Home E #9", minute: "41" },
@@ -127,6 +132,7 @@ export const SAMPLE_MATCHES: MatchRow[] = [
     away_score: "2",
     kickoff: "",
     status: "FT",
+    generate_video: "YES",
     statistics: SAMPLE_STATS_MOCK_F,
     goal_scorers: [
       { team: "home", player: "Home F #9", minute: "28" },

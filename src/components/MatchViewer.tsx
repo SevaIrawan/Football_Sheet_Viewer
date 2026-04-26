@@ -259,6 +259,7 @@ export function MatchViewer() {
           <LogoImg
             kind="leagues"
             logoKey={activeMatch.league_logo_key}
+            logoUrl={activeMatch.league_logo_url}
             label={activeMatch.league_name || "Liga"}
             className={`${HEADER_LOGO_MATCH_SIZE} rounded-full object-cover ring-2 ring-white/[0.12]`}
           />

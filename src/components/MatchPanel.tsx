@@ -15,7 +15,7 @@ function statusSubtitle(m: MatchRow, scored: boolean): string {
   const s = m.status.trim().toUpperCase();
   if (s === "LIVE") return "Live";
   if (s === "NS" || s === "SCHEDULED") return "Belum dimulai";
-  if (s === "FT" || s === "AET" || s === "PEN") {
+  if (s === "FT" || s === "AET" || s === "PEN" || s === "FINISHED") {
     if (s === "AET") return "After Extra Time";
     if (s === "PEN") return "Penalties";
     return "Full Time";
@@ -356,6 +356,7 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             <LogoImg
               kind="teams"
               logoKey={m.home_logo_key}
+              logoUrl={m.home_logo_url}
               label={m.home_name}
               className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-white/[0.12] sm:h-[4.25rem] sm:w-[4.25rem]"
             />
@@ -379,6 +380,7 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             <LogoImg
               kind="teams"
               logoKey={m.away_logo_key}
+              logoUrl={m.away_logo_url}
               label={m.away_name}
               className="h-14 w-14 shrink-0 rounded-full object-cover ring-2 ring-white/[0.12] sm:h-[4.25rem] sm:w-[4.25rem]"
             />
@@ -468,6 +470,7 @@ function MatchScheduleCard({ m }: { m: MatchRow }) {
           <LogoImg
             kind="teams"
             logoKey={m.home_logo_key}
+            logoUrl={m.home_logo_url}
             label={m.home_name}
             className="h-12 w-12 rounded-full object-cover ring-2 ring-white/[0.1]"
           />
@@ -484,6 +487,7 @@ function MatchScheduleCard({ m }: { m: MatchRow }) {
           <LogoImg
             kind="teams"
             logoKey={m.away_logo_key}
+            logoUrl={m.away_logo_url}
             label={m.away_name}
             className="h-12 w-12 rounded-full object-cover ring-2 ring-white/[0.1]"
           />
