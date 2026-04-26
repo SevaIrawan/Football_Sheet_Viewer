@@ -11,7 +11,7 @@ export function hasScore(m: MatchRow): boolean {
   );
 }
 
-/** Satu string per sisi: "Kane 15', Sane 78'" — untuk kartu skor (wrap max 3 baris di UI). */
+/** Satu string per sisi dari `goal_scorers` (fallback jika tidak ada teks mentah sheet). */
 function formatSideScorersCompact(
   scorers: GoalScorer[] | null | undefined,
   side: "home" | "away",
@@ -29,6 +29,16 @@ function formatSideScorersCompact(
     })
     .filter(Boolean);
   return parts.join(", ");
+}
+
+/** Tampilan kartu skor: utamakan teks persis kolom DB/sheet, lalu fallback ke array. */
+function scoreCardSideGoalsText(m: MatchRow, side: "home" | "away"): string {
+  const raw =
+    side === "home"
+      ? m.home_goal_scorers_text?.trim()
+      : m.away_goal_scorers_text?.trim();
+  if (raw) return raw;
+  return formatSideScorersCompact(m.goal_scorers, side);
 }
 
 function statusSubtitle(m: MatchRow, scored: boolean): string {
@@ -281,8 +291,14 @@ export function MatchScoreEmptySlide({ panelNumber }: { panelNumber: number }) {
 /** Hanya papan skor — satu slide per pertandingan (carousel). */
 export function MatchScoreSlide({ m }: { m: MatchRow }) {
   const subtitle = statusSubtitle(m, true);
-  const homeGoals = formatSideScorersCompact(m.goal_scorers, "home");
-  const awayGoals = formatSideScorersCompact(m.goal_scorers, "away");
+  const homeGoals = scoreCardSideGoalsText(m, "home");
+  const awayGoals = scoreCardSideGoalsText(m, "away");
+
+  const goalLineClass =
+    "line-clamp-3 w-full max-w-[11rem] break-words px-0.5 text-[9px] font-medium leading-snug text-slate-400 sm:max-w-[13rem] sm:text-[10px]";
+  /** Slot tinggi tetap (~3 baris) supaya kartu stabil saat 0-0 / tanpa pencetak gol. */
+  const goalSlotClass =
+    "flex min-h-[2.875rem] w-full max-w-[11rem] flex-col justify-start sm:min-h-[3.1rem] sm:max-w-[13rem]";
 
   return (
     <article className="score-card-field w-full min-w-0 overflow-hidden rounded-2xl border border-white/[0.08] shadow-lg shadow-black/30">
@@ -299,14 +315,13 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
               {m.home_name}
             </p>
-            {homeGoals ? (
-              <p
-                className="line-clamp-3 w-full max-w-[11rem] break-words px-0.5 text-right text-[9px] font-medium leading-snug text-slate-400 sm:max-w-[13rem] sm:text-[10px]"
-                title={homeGoals}
-              >
-                {homeGoals}
-              </p>
-            ) : null}
+            <div className={`${goalSlotClass} items-end`}>
+              {homeGoals ? (
+                <p className={`${goalLineClass} text-right`} title={homeGoals}>
+                  {homeGoals}
+                </p>
+              ) : null}
+            </div>
           </div>
 
           <div className="flex min-w-[4.75rem] flex-col items-center justify-center gap-0.5 px-0.5 pt-0.5 sm:min-w-[5.25rem] sm:gap-1 sm:px-1 sm:pt-1">
@@ -331,14 +346,13 @@ export function MatchScoreSlide({ m }: { m: MatchRow }) {
             <p className="line-clamp-2 w-full min-w-0 break-words px-0.5 text-center text-[10px] font-bold leading-snug text-white sm:text-xs">
               {m.away_name}
             </p>
-            {awayGoals ? (
-              <p
-                className="line-clamp-3 w-full max-w-[11rem] break-words px-0.5 text-left text-[9px] font-medium leading-snug text-slate-400 sm:max-w-[13rem] sm:text-[10px]"
-                title={awayGoals}
-              >
-                {awayGoals}
-              </p>
-            ) : null}
+            <div className={`${goalSlotClass} items-start`}>
+              {awayGoals ? (
+                <p className={`${goalLineClass} text-left`} title={awayGoals}>
+                  {awayGoals}
+                </p>
+              ) : null}
+            </div>
           </div>
         </div>
       </div>

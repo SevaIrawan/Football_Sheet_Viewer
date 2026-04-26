@@ -42,4 +42,7 @@ export type MatchRow = {
   statistics?: MatchStatistics | null;
   /** Opsional — daftar pencetak gol untuk tab Statistics. */
   goal_scorers?: GoalScorer[] | null;
+  /** Teks persis dari kolom sheet (prioritas tampil di kartu skor). */
+  home_goal_scorers_text?: string;
+  away_goal_scorers_text?: string;
 };

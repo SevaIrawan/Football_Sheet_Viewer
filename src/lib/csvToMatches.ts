@@ -83,6 +83,10 @@ function recordToMatch(row: Record<string, string>): MatchRow {
   }
   out.statistics = parseStatistics(row);
   out.goal_scorers = parseGoalScorers(row);
+  const hgs = readFirst(row, ["home_goal_scorers", "home_scorers"]);
+  const ags = readFirst(row, ["away_goal_scorers", "away_scorers"]);
+  if (hgs) out.home_goal_scorers_text = hgs;
+  if (ags) out.away_goal_scorers_text = ags;
   out.generate_video = normalizeGenerateVideoStatus(
     readFirst(row, ["generate_video"]),
   );
@@ -192,6 +196,7 @@ function parseSideScorers(text: string, team: "home" | "away"): GoalScorer[] {
   if (!text) return [];
   return text
     .split(/[|;\n]+/g)
+    .flatMap((chunk) => chunk.split(/\s*,\s*/))
     .map((s) => s.trim())
     .filter(Boolean)
     .map((token) => {
@@ -214,6 +219,7 @@ function parseCombinedScorers(text: string): GoalScorer[] {
   if (!text) return [];
   return text
     .split(/[|;\n]+/g)
+    .flatMap((chunk) => chunk.split(/\s*,\s*/))
     .map((s) => s.trim())
     .filter(Boolean)
     .map((token) => {
