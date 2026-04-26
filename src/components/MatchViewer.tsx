@@ -36,39 +36,54 @@ type ApiResponse = {
   error?: string;
 };
 
-function normalizeDateText(input?: string): string {
+/** Tanggal panjang untuk header, mis. "21 April 2026". */
+function formatMatchDateLong(input?: string): string {
   const raw = (input ?? "").trim();
   if (!raw) return "";
   const d = new Date(raw);
   if (Number.isNaN(d.getTime())) return raw;
   return new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "short",
+    day: "numeric",
+    month: "long",
     year: "numeric",
     timeZone: "Asia/Jakarta",
   }).format(d);
 }
 
-function normalizeMatchweekText(input?: string): string {
-  const raw = (input ?? "").trim();
-  if (!raw) return "";
-  const m = raw.match(/^pekan\s*(\d+)$/i);
-  if (m?.[1]) return `GW ${m[1]}`;
-  return raw;
+/** Angka pekan untuk label "GW : …" (angka, Pekan N, GW N, dll.). */
+function matchweekToGwNumber(matchweek: string): string | null {
+  const raw = matchweek.trim();
+  if (!raw) return null;
+  const pekan = raw.match(/^pekan\s*(\d+)$/i);
+  if (pekan?.[1]) return pekan[1];
+  const gw = raw.match(/^gw\s*:?\s*(\d+)$/i);
+  if (gw?.[1]) return gw[1];
+  if (/^\d+$/.test(raw)) return raw;
+  const any = raw.match(/(\d+)/);
+  return any?.[1] ?? null;
 }
 
-function headerLeagueSubtitleParts(m: MatchRow): string[] {
-  const parts: string[] = [];
+/** Baris 1: "Season : … | GW : …", baris 2: "Date : …". */
+function headerLeagueCaption(m: MatchRow): {
+  line1: string | null;
+  line2: string | null;
+  fallback: string | null;
+} {
   const season = (m.season ?? "").trim();
-  const matchweek = normalizeMatchweekText(m.matchweek);
-  const dateText = normalizeDateText(m.match_date);
+  const gwNum = matchweekToGwNumber(m.matchweek);
+  const parts: string[] = [];
+  if (season) parts.push(`Season : ${season}`);
+  if (gwNum) parts.push(`GW : ${gwNum}`);
+  const line1 = parts.length > 0 ? parts.join(" | ") : null;
 
-  if (season) parts.push(season);
-  if (matchweek) parts.push(matchweek);
-  if (dateText) parts.push(dateText);
-  if (parts.length === 0 && m.kickoff.trim()) parts.push(m.kickoff.trim());
+  const dateLong = formatMatchDateLong(m.match_date);
+  const line2 = dateLong ? `Date : ${dateLong}` : null;
 
-  return parts.length > 0 ? parts : ["\u2014"];
+  const kick = m.kickoff.trim();
+  const fallback =
+    !line1 && !line2 ? (kick.length > 0 ? kick : "\u2014") : null;
+
+  return { line1, line2, fallback };
 }
 
 function getSlideStepPx(el: HTMLDivElement): number {
@@ -251,21 +266,22 @@ export function MatchViewer() {
   }, []);
 
   const activeMatch = slides[activeIndex];
+  const leagueCaption = activeMatch ? headerLeagueCaption(activeMatch) : null;
 
   return (
     <div className="flex min-h-0 w-full flex-1 flex-col overflow-hidden px-2 pb-1 pt-2 sm:px-2.5">
-      <header className="mb-3 shrink-0 flex items-center gap-2 rounded-2xl border border-white/[0.08] bg-[#0c1220] px-3 pb-3 pt-3.5 sm:gap-3 sm:px-4 sm:pb-3.5 sm:pt-4">
+      <header className="mb-3 shrink-0 flex items-start gap-2.5 rounded-2xl border border-white/[0.08] bg-[#0c1220] px-3 py-4 sm:gap-3 sm:px-4 sm:py-[1.125rem]">
         {activeMatch ? (
           <LogoImg
             kind="leagues"
             logoKey={activeMatch.league_logo_key}
             logoUrl={activeMatch.league_logo_url}
             label={activeMatch.league_name || "Liga"}
-            className={`${HEADER_LOGO_MATCH_SIZE} rounded-full object-cover ring-2 ring-white/[0.12]`}
+            className={`${HEADER_LOGO_MATCH_SIZE} mt-0.5 shrink-0 rounded-full object-cover ring-2 ring-white/[0.12]`}
           />
         ) : (
           <div
-            className={`${HEADER_LOGO_MATCH_SIZE} shrink-0 rounded-full border border-white/10 bg-white/[0.04] ring-2 ring-white/[0.06]`}
+            className={`${HEADER_LOGO_MATCH_SIZE} mt-0.5 shrink-0 rounded-full border border-white/10 bg-white/[0.04] ring-2 ring-white/[0.06]`}
             aria-hidden
           />
         )}
@@ -276,20 +292,25 @@ export function MatchViewer() {
               : "Football Sheet Viewer"}
           </h1>
           {activeMatch ? (
-            <div className="mt-1 flex min-w-0 items-center gap-1.5 overflow-hidden">
-              {headerLeagueSubtitleParts(activeMatch).map((part, idx) => (
-                <div key={`${part}-${idx}`} className="flex min-w-0 items-center gap-1.5">
-                  {idx > 0 ? (
-                    <span className="h-1 w-1 shrink-0 rounded-full bg-brand-400/70" aria-hidden />
-                  ) : null}
-                  <span className="truncate rounded-full border border-white/[0.08] bg-white/[0.03] px-1.5 py-0.5 text-[10px] font-medium text-slate-300 sm:text-[11px]">
-                    {part}
-                  </span>
-                </div>
-              ))}
+            <div className="mt-2 flex min-w-0 flex-col gap-1">
+              {leagueCaption?.line1 ? (
+                <p className="text-[11px] font-medium leading-relaxed text-slate-300 sm:text-xs">
+                  {leagueCaption.line1}
+                </p>
+              ) : null}
+              {leagueCaption?.line2 ? (
+                <p className="text-[11px] font-medium leading-relaxed text-slate-300 sm:text-xs">
+                  {leagueCaption.line2}
+                </p>
+              ) : null}
+              {leagueCaption?.fallback ? (
+                <p className="text-[11px] font-medium leading-relaxed text-slate-400 sm:text-xs">
+                  {leagueCaption.fallback}
+                </p>
+              ) : null}
             </div>
           ) : (
-            <p className="truncate text-xs text-slate-400">
+            <p className="mt-2 truncate text-xs text-slate-400">
               {source === "sample"
                 ? `Papan ${activeIndex + 1} kosong — data demo`
                 : source === "sheet"
@@ -298,7 +319,9 @@ export function MatchViewer() {
             </p>
           )}
         </div>
-        <AccountAvatar />
+        <div className="mt-0.5 shrink-0">
+          <AccountAvatar />
+        </div>
       </header>
 
       {error ? (
